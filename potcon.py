@@ -75,8 +75,6 @@ def respawn():
         sql_con, alderon_id, dinosaur_id)/3600
     flag_ancient_normal = sql_con.query_database(
         f'''SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' AND id_dino = '{dinosaur_id}' AND tipo_anciao = 'normal' ''')
-    if time_played < min_time or flag_ancient_normal.empty:
-        return "Sucesso", 200
 
     # Adiciona os stats do anciao padrao
     if not flag_ancient_normal.empty:
