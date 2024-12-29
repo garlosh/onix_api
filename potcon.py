@@ -40,7 +40,7 @@ def calcular_tempo_total_jogador(client: sqlHandler.Client, player_id: str, dino
     """
     query = f'''SELECT
                 SUM(TIMESTAMPDIFF(SECOND, data_login, data_logout)) AS total_segundos
-            FROM logins
+            FROM respawns
             WHERE id_alderon = '{player_id}' AND id_dino = '{dino}' '''
 
     df_result = client.query_database(query)
@@ -65,10 +65,11 @@ def respawn():
     dinosaur = data['CharacterName']
     dinosaur_id = data['CharacterID']
     growth = data['DinosaurGrowth']
+    server_guid = data['ServerGuid']
 
     # Insere o login no sql
-    sql_con.execute_query(f'''INSERT INTO logins (id_alderon, nome_player, id_dino, nome_dino)
-                            VALUES ('{alderon_id}', '{player_name}', '{dinosaur_id}','{dinosaur}'); ''')
+    sql_con.execute_query(f'''INSERT INTO respawns (server_guid, id_alderon, nome_player, id_dino, nome_dino)
+                            VALUES ('{server_guid}', '{alderon_id}', '{player_name}', '{dinosaur_id}','{dinosaur}'); ''')
 
     # Calcula o tempo e verifica se já é ancião
     time_played = calcular_tempo_total_jogador(
@@ -118,7 +119,7 @@ def leave():
     data = request.get_json()
     alderon_id = data['PlayerAlderonId']
     sql_con.execute_query(f'''
-                        UPDATE logins
+                        UPDATE respawns
                         SET data_logout = NOW()
                         WHERE id_alderon = '{alderon_id}';
                         ''')
