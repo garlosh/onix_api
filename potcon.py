@@ -69,9 +69,7 @@ def respawn():
 
     # Insere o login no sql
     sql_con_logins.execute_query(f'''INSERT INTO logins (id_alderon, nome_player, nome_dino)
-                            VALUES ({player_name},
-                                    '{alderon_id}', '{dinosaur}');
-                            ''')
+                            VALUES ('{alderon_id}', '{player_name}', '{dinosaur}'); ''')
 
     # Calcula o tempo e verifica se já é ancião
     time_played = calcular_tempo_total_jogador(sql_con_logins, alderon_id)/3600
@@ -90,9 +88,7 @@ def respawn():
         stat_aleatorio = choice(list(ancient_stats.keys()))
         min_attr = ancient_stats[stat_aleatorio]['min']
         sql_con_logins.execute_query(f'''INSERT INTO logins (id_alderon, nome_player, nome_dino, stat, tipo_anciao)
-                            VALUES ({player_name},
-                                    '{alderon_id}', '{dinosaur}', '{stat_aleatorio}', 'normal');
-                            ''')
+                            VALUES ({player_name}, '{alderon_id}','{dinosaur}', '{stat_aleatorio}', 'normal'); ''')
         path_rcon_client.execute_rcommand(
             f'modattr {alderon_id} {stat_aleatorio} {min_attr}')
         path_rcon_client.execute_rcommand(
