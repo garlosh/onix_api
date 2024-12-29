@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import pandas as pd
+
 
 @dataclass
 class Client:
@@ -14,18 +15,19 @@ class Client:
     DB_TABLE: str
 
     def __post_init__(self) -> None:
-        DATABASE_URI = f'{self.DB_TYPE}+{self.DB_DRIVER}://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
+        DATABASE_URI = f'{self.DB_TYPE}+{self.DB_DRIVER}://{self.DB_USER}:{
+            self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
         self.ENGINE = create_engine(DATABASE_URI)
 
     def execute_query(self, query) -> None:
         with self.ENGINE.connect() as connection:
-            connection.execute(query)
+            connection.execute(text(query))
 
     def query_database(self, query) -> pd.DataFrame:
-        resultado = pd.read_sql(query, con= self.ENGINE)
+        resultado = pd.read_sql(query, con=self.ENGINE)
         self.ENGINE.dispose()
         return resultado
-    
+
     def verify_engine(self) -> bool:
         try:
             self.ENGINE.connect()

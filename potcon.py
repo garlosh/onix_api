@@ -68,12 +68,12 @@ def respawn():
     growth = data['DinosaurGrowth']
 
     # Insere o login no sql
-    sql_con_logins.execute_query(f'''INSERT INTO logins (id_alderon, nome_player, nome_dino)
+    sql_con_logins.query_database(f'''INSERT INTO logins (id_alderon, nome_player, nome_dino)
                             VALUES ('{alderon_id}', '{player_name}', '{dinosaur}'); ''')
 
     # Calcula o tempo e verifica se já é ancião
     time_played = calcular_tempo_total_jogador(sql_con_logins, alderon_id)/3600
-    flag_ancient = sql_con_ancioes.execute_query(
+    flag_ancient = sql_con_ancioes.query_database(
         f'''SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' ''')
     if not flag_ancient.empty:
         min_attr = ancient_stats[flag_ancient['stat']]['min']
