@@ -150,6 +150,11 @@ def player_report():
     sql_con.insert_json(table_name="player_report", json_data=mapped_data)
 
 
+@app.route('/pot/server_start', methods=['POST'])
+def server_start():
+    path_rcon_client.execute_rcommand("loadcreatormode 1")
+
+
 if __name__ == '__main__':
     # run app in debug mode on port 80
     # app_server = WSGIServer(("127.0.0.1", 80), app)
