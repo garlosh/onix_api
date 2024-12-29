@@ -102,7 +102,7 @@ def killed():
                         WHERE id_alderon = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}' AND tipo_anciao = 'normal';
                         ''')
     sql_con.execute_query(f'''
-                        DELETE FROM logins
+                        DELETE FROM respawns
                         WHERE id_alderon = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}';
                         ''')
     return 'Success', 200
