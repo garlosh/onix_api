@@ -83,7 +83,7 @@ def respawn():
         path_rcon_client.execute_rcommand(
             f'modattr {alderon_id} {flag_ancient['stat']} {stat_increase:.2f}')
         path_rcon_client.execute_rcommand(
-            f'announce Um dinosauro anci\u00c2o conectou no servidor!')
+            f'announce Um dinosauro anci\u00e3o conectou no servidor!')
     elif growth == 1.0 and time_played > min_time:
         stat_aleatorio = choice(list(ancient_stats.keys()))
         min_attr = ancient_stats[stat_aleatorio]['min']
@@ -92,7 +92,7 @@ def respawn():
         path_rcon_client.execute_rcommand(
             f'modattr {alderon_id} {stat_aleatorio} {min_attr}')
         path_rcon_client.execute_rcommand(
-            f'announce Um dinosauro anci\u00c2o conectou no servidor!')
+            f'announce Um dinosauro anci\u00e3o conectou no servidor!')
     return 'Success', 200
 
 
