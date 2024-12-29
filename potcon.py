@@ -79,8 +79,8 @@ def respawn():
         flag_ancient = flag_ancient.iloc[0]
         min_attr = ancient_stats[flag_ancient['stat']]['min']
         max_attr = ancient_stats[flag_ancient['stat']]['max']
-        stat_increase = min_attr + log_regression(
-            min_time, 0, max_time, max_attr, time_played)
+        stat_increase = log_regression(
+            min_time, min_attr, max_time, max_attr, time_played)
         path_rcon_client.execute_rcommand(
             f'modattr {alderon_id} {flag_ancient['stat']} {stat_increase:.2f}')
         path_rcon_client.execute_rcommand(
