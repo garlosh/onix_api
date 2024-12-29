@@ -12,7 +12,6 @@ class Client:
     DB_HOST: str
     DB_PORT: str  # porta apropriada para o seu banco de dados
     DB_NAME: str
-    DB_TABLE: str
 
     def __post_init__(self) -> None:
         DATABASE_URI = f'{self.DB_TYPE}+{self.DB_DRIVER}://{self.DB_USER}:{
