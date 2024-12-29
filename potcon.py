@@ -104,7 +104,7 @@ def logout():
     sql_con.execute_query(f'''
                         UPDATE logins
                         SET data_logout = NOW()
-                        WHERE id = {alderon_id};
+                        WHERE id = '{alderon_id}';
                         ''')
 
 
@@ -112,6 +112,16 @@ def logout():
 def killed():
     data = request.get_json()
     victim = data['VictimCharacterName']
+    alderon_id = data['VictimAlderonId']
+    nome_player = data['VictimName']
+    sql_con.execute_query(f'''
+                        DELETE FROM ancioes
+                        WHERE id = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}' AND tipo_anciao = 'normal';
+                        ''')
+    sql_con.execute_query(f'''
+                        DELETE FROM logins
+                        WHERE id = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}';
+                        ''')
 
 
 if __name__ == '__main__':
