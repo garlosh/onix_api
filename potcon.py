@@ -98,7 +98,7 @@ def respawn():
 
     # Adiciona os stats dos jogadores foda
     flag_ancient_especial = sql_con.query_database(
-        f'''SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' tipo_anciao = 'especial' ''')
+        f'''SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' AND tipo_anciao = 'especial' ''')
     if not flag_ancient_especial.empty:
         flag_ancient_especial = flag_ancient_especial.iloc[0]
         stats = ['stat1', 'stat2']
