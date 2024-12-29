@@ -20,8 +20,9 @@ class Client:
         self.ENGINE = create_engine(DATABASE_URI)
 
     def execute_query(self, query) -> None:
-        with self.ENGINE.connect().execution_options(autocommit=True) as connection:
+        with self.ENGINE.connect() as connection:
             connection.execute(text(query))
+            connection.commit()
 
     def query_database(self, query) -> pd.DataFrame:
         resultado = pd.read_sql(query, con=self.ENGINE)
