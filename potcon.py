@@ -153,6 +153,7 @@ def player_report():
 @app.route('/pot/server_start', methods=['POST'])
 def server_start():
     path_rcon_client.execute_rcommand("loadcreatormode 1")
+    return "Sucesso", 200
 
 
 if __name__ == '__main__':
