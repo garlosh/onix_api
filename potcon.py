@@ -41,7 +41,7 @@ def calcular_tempo_total_jogador(client: sqlHandler.Client, player_id: str, dino
     query = f'''SELECT
                 SUM(TIMESTAMPDIFF(SECOND, data_login, data_logout)) AS total_segundos
             FROM logins
-            WHERE id_alderon = '{player_id}' AND nome_dino = '{dino}' '''
+            WHERE id_alderon = '{player_id}' AND id_dino = '{dino}' '''
 
     df_result = client.query_database(query)
 
@@ -72,7 +72,7 @@ def respawn():
 
     # Calcula o tempo e verifica se já é ancião
     time_played = calcular_tempo_total_jogador(
-        sql_con, alderon_id, dinosaur)/3600
+        sql_con, alderon_id, dinosaur_id)/3600
     flag_ancient_normal = sql_con.query_database(
         f'''SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' AND id_dino = '{dinosaur_id}' AND tipo_anciao = 'normal' ''')
     if time_played < min_time or flag_ancient_normal.empty:
