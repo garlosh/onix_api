@@ -8,7 +8,7 @@ sql_con_logins = sqlHandler.Client('mysql', 'pymysql', 'adm',
                                    'cabeca0213', '127.0.0.1', '3306', 'projeto_onix', 'logins')
 sql_con_ancioes = sqlHandler.Client('mysql', 'pymysql', 'adm',
                                     'cabeca0213', '127.0.0.1', '3306', 'projeto_onix', 'ancioes')
-path_rcon_client = pathcon.client('191.255.115.138', 7779, 'Cucetinha')
+path_rcon_client = pathcon.client('127.0.0.1', 7779, 'Cucetinha')
 ancient_stats = {'MaxHealth': {'min': 10, 'max': 50}, 'Armor': {'min': 0.01, 'max': 0.05},
                  'CombatWeight': {'min': 100, 'max': 325}, 'MaxStamina': {'min': 5, 'max': 15}}
 
