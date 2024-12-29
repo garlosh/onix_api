@@ -87,7 +87,7 @@ def respawn():
     elif growth == 1.0 and time_played > min_time:
         stat_aleatorio = choice(list(ancient_stats.keys()))
         min_attr = ancient_stats[stat_aleatorio]['min']
-        sql_con_logins.execute_query(f'''INSERT INTO logins (id_alderon, nome_player, nome_dino, stat, tipo_anciao)
+        sql_con_logins.execute_query(f'''INSERT INTO ancioes (id_alderon, nome_player, nome_dino, stat, tipo_anciao)
                             VALUES ({player_name}, '{alderon_id}','{dinosaur}', '{stat_aleatorio}', 'normal'); ''')
         path_rcon_client.execute_rcommand(
             f'modattr {alderon_id} {stat_aleatorio} {min_attr}')
