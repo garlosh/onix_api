@@ -117,11 +117,11 @@ def killed():
     nome_player = data['VictimName']
     sql_con_ancioes.execute_query(f'''
                         DELETE FROM ancioes
-                        WHERE id = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}' AND tipo_anciao = 'normal';
+                        WHERE id_alderon = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}' AND tipo_anciao = 'normal';
                         ''')
     sql_con_logins.execute_query(f'''
                         DELETE FROM logins
-                        WHERE id = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}';
+                        WHERE id_alderon = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}';
                         ''')
     return 'Success', 200
 
