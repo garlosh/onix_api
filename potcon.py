@@ -4,8 +4,10 @@ from classes import pathcon
 import numpy as np
 from random import choice
 app = Flask(__name__)
-sql_con = sqlHandler.Client('mysql', 'pymysql', 'adm',
-                            'cabeca0213', '127.0.0.1', '3306', 'projeto_onix', 'logins')
+sql_con_logins = sqlHandler.Client('mysql', 'pymysql', 'adm',
+                                   'cabeca0213', '127.0.0.1', '3306', 'projeto_onix', 'logins')
+sql_con_ancioes = sqlHandler.Client('mysql', 'pymysql', 'adm',
+                                    'cabeca0213', '127.0.0.1', '3306', 'projeto_onix', 'ancioes')
 path_rcon_client = pathcon.client('191.255.115.138', 7779, 'Cucetinha')
 ancient_stats = {'MaxHealth': {'min': 10, 'max': 50}, 'Armor': {'min': 0.01, 'max': 0.05},
                  'CombatWeight': {'min': 100, 'max': 325}, 'MaxStamina': {'min': 5, 'max': 15}}
@@ -66,14 +68,14 @@ def respawn():
     growth = data['DinosaurGrowth']
 
     # Insere o login no sql
-    sql_con.execute_query(f'''INSERT INTO logins (id_alderon, nome_player, nome_dino)
+    sql_con_logins.execute_query(f'''INSERT INTO logins (id_alderon, nome_player, nome_dino)
                             VALUES ({player_name},
                                     '{alderon_id}', '{dinosaur}');
                             ''')
 
     # Calcula o tempo e verifica se já é ancião
-    time_played = calcular_tempo_total_jogador(sql_con, alderon_id)/3600
-    flag_ancient = sql_con.execute_query(
+    time_played = calcular_tempo_total_jogador(sql_con_logins, alderon_id)/3600
+    flag_ancient = sql_con_ancioes.execute_query(
         f'''SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' ''')
     if not flag_ancient.empty:
         min_attr = ancient_stats[flag_ancient['stat']]['min']
@@ -87,7 +89,7 @@ def respawn():
     elif growth == 1.0 and time_played > min_time:
         stat_aleatorio = choice(list(ancient_stats.keys()))
         min_attr = ancient_stats[stat_aleatorio]['min']
-        sql_con.execute_query(f'''INSERT INTO logins (id_alderon, nome_player, nome_dino, stat, tipo_anciao)
+        sql_con_logins.execute_query(f'''INSERT INTO logins (id_alderon, nome_player, nome_dino, stat, tipo_anciao)
                             VALUES ({player_name},
                                     '{alderon_id}', '{dinosaur}', '{stat_aleatorio}', 'normal');
                             ''')
@@ -98,10 +100,10 @@ def respawn():
 
 
 @app.route('/pot/leave', methods=['POST'])
-def logout():
+def leave():
     data = request.get_json()
     alderon_id = data['PlayerAlderonId']
-    sql_con.execute_query(f'''
+    sql_con_logins.execute_query(f'''
                         UPDATE logins
                         SET data_logout = NOW()
                         WHERE id = '{alderon_id}';
@@ -114,11 +116,11 @@ def killed():
     victim = data['VictimCharacterName']
     alderon_id = data['VictimAlderonId']
     nome_player = data['VictimName']
-    sql_con.execute_query(f'''
+    sql_con_ancioes.execute_query(f'''
                         DELETE FROM ancioes
                         WHERE id = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}' AND tipo_anciao = 'normal';
                         ''')
-    sql_con.execute_query(f'''
+    sql_con_logins.execute_query(f'''
                         DELETE FROM logins
                         WHERE id = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}';
                         ''')
