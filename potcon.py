@@ -47,6 +47,8 @@ def respawn():
             min_time, min_attr, max_time, max_attr, time_played)
         path_rcon_client.execute_rcommand(
             f"modattr {alderon_id} {stat} {stat_increase:.2f}")
+        path_rcon_client.execute_rcommand(
+            "systemmessageall Um dinosauro ancião conectou no servidor!")
     elif growth == 1.0 and time_played > min_time:
         stat = choice(list(ancient_stats.keys()))
         min_attr = ancient_stats[stat]['min']
@@ -56,6 +58,8 @@ def respawn():
         )
         path_rcon_client.execute_rcommand(
             f"""modattr {alderon_id} {stat} {min_attr}""")
+        path_rcon_client.execute_rcommand(
+            "systemmessageall Um dinosauro ancião conectou no servidor!")
 
     special_ancient = sql_con.query_database(
         f"""SELECT * FROM ancioes WHERE id_alderon = '{
@@ -72,8 +76,8 @@ def respawn():
             path_rcon_client.execute_rcommand(
                 f"modattr {alderon_id} {stat} {stat_increase:.2f}")
 
-    path_rcon_client.execute_rcommand(
-        "systemmessageall Um dinosauro ancião conectou no servidor!")
+        path_rcon_client.execute_rcommand(
+            "systemmessageall Um dinosauro ancião conectou no servidor!")
 
     return 'Success', 200
 
