@@ -3,6 +3,7 @@ from classes import sqlHandler
 from classes import pathcon
 import numpy as np
 from random import choice
+from gevent.pywsgi import WSGIServer
 app = Flask(__name__)
 sql_con = sqlHandler.Client('mysql', 'pymysql', 'adm',
                             'cabeca0213', '127.0.0.1', '3306', 'projeto_onix')
@@ -142,4 +143,5 @@ def killed():
 
 if __name__ == '__main__':
     # run app in debug mode on port 80
-    app.run(port=80)
+    app_server = WSGIServer(("127.0.0.1", 80), app)
+    app_server.serve_forever()
