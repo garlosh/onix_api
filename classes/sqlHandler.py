@@ -17,7 +17,7 @@ class Client:
         DATABASE_URI = f'{self.DB_TYPE}+{self.DB_DRIVER}://{self.DB_USER}:{
             self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
         self.ENGINE = create_engine(DATABASE_URI)
-        self.METADATA = MetaData(bind=self.ENGINE)
+        # self.METADATA = MetaData(bind=self.ENGINE)
 
     def execute_query(self, query) -> None:
         with self.ENGINE.connect() as connection:
