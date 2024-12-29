@@ -74,9 +74,8 @@ def respawn():
     # Calcula o tempo e verifica se já é ancião
     time_played = calcular_tempo_total_jogador(sql_con_logins, alderon_id)/3600
     flag_ancient = sql_con_ancioes.query_database(
-        f'''SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' ''')
+        f'''SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' ''').iloc[0]
     if not flag_ancient.empty:
-        print(flag_ancient)
         min_attr = ancient_stats[flag_ancient['stat']]['min']
         max_attr = ancient_stats[flag_ancient['stat']]['max']
         stat_increase = min_attr + log_regression(
