@@ -106,7 +106,7 @@ def leave():
                         ''')
 
 
-@app.route('/pot/killed', method=['POST'])
+@app.route('/pot/killed', methods=['POST'])
 def killed():
     data = request.get_json()
     victim = data['VictimCharacterName']
