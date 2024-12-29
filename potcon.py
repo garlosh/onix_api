@@ -4,12 +4,14 @@ from classes import pathcon
 from utils import *
 from random import choice
 from gevent.pywsgi import WSGIServer
+import json
 app = Flask(__name__)
 sql_con = sqlHandler.Client('mysql', 'pymysql', 'adm',
                             'cabeca0213', '127.0.0.1', '3306', 'projeto_onix')
 path_rcon_client = pathcon.client('127.0.0.1', 7779, 'Cucetinha')
-ancient_stats = {'MaxHealth': {'min': 10, 'max': 70}, 'Armor': {'min': 0.01, 'max': 0.05},
-                 'CombatWeight': {'min': 100, 'max': 325}, 'MaxStamina': {'min': 5, 'max': 15}}
+
+with open('config.json') as json_file:
+    ancient_stats = json.load(json_file)
 
 
 @app.route('/pot/respawn', methods=['POST'])
@@ -25,16 +27,16 @@ def respawn():
     server_guid = data['ServerGuid']
 
     sql_con.execute_query(
-        f"INSERT INTO respawns (server_guid, id_alderon, nome_player, id_dino, nome_dino) \
-        VALUES ('{server_guid}', '{alderon_id}', '{player_name}', '{dinosaur_id}', '{dinosaur}');"
+        f"""INSERT INTO respawns (server_guid, id_alderon, nome_player, id_dino, nome_dino) \
+        VALUES ('{server_guid}', '{alderon_id}', '{player_name}', '{dinosaur_id}', '{dinosaur}');"""
     )
 
     time_played = calcular_tempo_total_jogador(
         sql_con, alderon_id, dinosaur_id) / 3600
 
     normal_ancient = sql_con.query_database(
-        f"SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' AND id_dino = '{
-            dinosaur_id}' AND tipo_anciao = 'normal';"
+        f"""SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' AND id_dino = '{
+            dinosaur_id}' AND tipo_anciao = 'normal';"""
     )
 
     if not normal_ancient.empty:
@@ -49,15 +51,15 @@ def respawn():
         stat = choice(list(ancient_stats.keys()))
         min_attr = ancient_stats[stat]['min']
         sql_con.execute_query(
-            f"INSERT INTO ancioes (id_alderon, nome_player, id_dino, nome_dino, stat1, tipo_anciao) \
-            VALUES ('{alderon_id}', '{player_name}', '{dinosaur_id}', '{dinosaur}', '{stat}', 'normal');"
+            f"""INSERT INTO ancioes (id_alderon, nome_player, id_dino, nome_dino, stat1, tipo_anciao) \
+            VALUES ('{alderon_id}', '{player_name}', '{dinosaur_id}', '{dinosaur}', '{stat}', 'normal');"""
         )
         path_rcon_client.execute_rcommand(
-            f"modattr {alderon_id} {stat} {min_attr}")
+            f"""modattr {alderon_id} {stat} {min_attr}""")
 
     special_ancient = sql_con.query_database(
-        f"SELECT * FROM ancioes WHERE id_alderon = '{
-            alderon_id}' AND tipo_anciao = 'especial';"
+        f"""SELECT * FROM ancioes WHERE id_alderon = '{
+            alderon_id}' AND tipo_anciao = 'especial';"""
     )
 
     if not special_ancient.empty:
@@ -98,6 +100,10 @@ def killed():
     sql_con.execute_query(f'''
                         DELETE FROM ancioes
                         WHERE id_alderon = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}' AND tipo_anciao = 'normal';
+                        ''')
+    sql_con.execute_query(f'''
+                        DELETE FROM logins
+                        WHERE id_alderon = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}';
                         ''')
     return 'Success', 200
 
