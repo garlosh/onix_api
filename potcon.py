@@ -68,7 +68,7 @@ def respawn():
     growth = data['DinosaurGrowth']
 
     # Insere o login no sql
-    sql_con_logins.query_database(f'''INSERT INTO logins (id_alderon, nome_player, nome_dino)
+    sql_con_logins.execute_query(f'''INSERT INTO logins (id_alderon, nome_player, nome_dino)
                             VALUES ('{alderon_id}', '{player_name}', '{dinosaur}'); ''')
 
     # Calcula o tempo e verifica se já é ancião
