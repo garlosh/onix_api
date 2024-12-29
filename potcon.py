@@ -32,7 +32,7 @@ def log_regression(x1, y_min, x2, y_max, val):
 
     # Retornar a função logarítmica
 
-    return a * np.log(val) + b
+    return min(a * np.log(val) + b, y_max)
 
 
 def calcular_tempo_total_jogador(client: sqlHandler.Client, player_id: str) -> float:
