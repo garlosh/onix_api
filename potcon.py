@@ -102,7 +102,7 @@ def leave():
     sql_con_logins.execute_query(f'''
                         UPDATE logins
                         SET data_logout = NOW()
-                        WHERE id = '{alderon_id}';
+                        WHERE id_alderon = '{alderon_id}';
                         ''')
 
 
