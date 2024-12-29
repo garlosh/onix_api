@@ -93,6 +93,7 @@ def respawn():
             f'modattr {alderon_id} {stat_aleatorio} {min_attr}')
         path_rcon_client.execute_rcommand(
             f'announce Um dinosauro anci\u00c2o conectou no servidor!')
+    return 'Success', 200
 
 
 @app.route('/pot/leave', methods=['POST'])
@@ -104,6 +105,8 @@ def leave():
                         SET data_logout = NOW()
                         WHERE id_alderon = '{alderon_id}';
                         ''')
+
+    return 'Success', 200
 
 
 @app.route('/pot/killed', methods=['POST'])
@@ -120,6 +123,7 @@ def killed():
                         DELETE FROM logins
                         WHERE id = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}';
                         ''')
+    return 'Success', 200
 
 
 if __name__ == '__main__':
