@@ -74,7 +74,7 @@ def respawn():
     time_played = calcular_tempo_total_jogador(
         sql_con, alderon_id, dinosaur)/3600
     flag_ancient_normal = sql_con.query_database(
-        f'''SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' AND id_dino = '{dinosaur_id}' tipo_anciao = 'normal' ''')
+        f'''SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' AND id_dino = '{dinosaur_id}' AND tipo_anciao = 'normal' ''')
     if time_played < min_time or flag_ancient_normal.empty:
         return "Sucesso", 200
 
@@ -143,4 +143,4 @@ def killed():
 
 if __name__ == '__main__':
     # run app in debug mode on port 80
-    app.run(debug=True, port=80)
+    app.run(port=80)
