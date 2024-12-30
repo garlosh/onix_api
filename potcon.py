@@ -184,4 +184,4 @@ if __name__ == '__main__':
     # run app in debug mode on port 80
     # app_server = WSGIServer(("127.0.0.1", 80), app)
     # app_server.serve_forever()
-    app.run(host='0.0.0.0', debug=True, port=80)
+    app.run(host='0.0.0.0', debug=True, port=7001)
