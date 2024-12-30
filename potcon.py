@@ -150,6 +150,17 @@ def server_start():
     return "Sucesso", 200
 
 
+@app.route('/pot/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    sql_con.execute_query(
+        f"""INSERT IGNORE INTO jogadores (id_alderon, server_guid, server_name, player_name)
+            VALUES ('{data["AlderonId"]}', '{data["ServerGuid"]}', '{data["ServerName"]}', '{data["PlayerName"]}');"""
+    )
+    return "Sucesso", 200
+
+
+# @app.rout('/pot/payment')
 if __name__ == '__main__':
     # run app in debug mode on port 80
     # app_server = WSGIServer(("127.0.0.1", 80), app)
