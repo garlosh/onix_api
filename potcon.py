@@ -103,11 +103,15 @@ def killed():
     nome_player = data['VictimName']
     sql_con.execute_query(f'''
                         DELETE FROM ancioes
-                        WHERE id_alderon = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}' AND tipo_anciao = 'normal';
+                        WHERE id_alderon = '{alderon_id}' AND nome_player = '{nome_player}'
+                        AND nome_dino = '{victim}'
+                        AND tipo_anciao = 'normal';
                         ''')
     sql_con.execute_query(f'''
                         DELETE FROM respawns
-                        WHERE id_alderon = '{alderon_id}' AND nome_player = '{nome_player}' AND nome_dino = '{victim}';
+                        WHERE id_alderon = '{alderon_id}'
+                        AND nome_player = '{nome_player}'
+                        AND nome_dino = '{victim}';
                         ''')
     return 'Success', 200
 
@@ -116,8 +120,15 @@ def killed():
 def server_error():
     data = request.get_json()
     sql_con.execute_query(
-        f"""INSERT INTO ancioes (server_guid, server_ip, server_name, uuid, provider, instance, session, error_message)
-            VALUES ('{data["ServerGuid"]}', '{data["ServerIP"]}', '{data["ServerName"]}', '{data["UUID"]}', '{data["Provider"]}', '{data["Instance"]}', '{data["Session"]}', '{data["ErrorMesssage"]}');"""
+        f"""INSERT INTO server_error (server_guid, server_ip, server_name, uuid, provider, instance, session, error_message)
+            VALUES ('{data["ServerGuid"]}',
+            '{data["ServerIP"]}',
+            '{data["ServerName"]}',
+            '{data["UUID"]}',
+            '{data["Provider"]}',
+            '{data["Instance"]}',
+            '{data["Session"]}',
+            '{data["ErrorMesssage"]}');"""
     )
     sql_con.insert_json(table_name="server_error", json_data=mapped_data)
 
@@ -155,14 +166,22 @@ def login():
     data = request.get_json()
     sql_con.execute_query(
         f"""INSERT IGNORE INTO jogadores (id_alderon, server_guid, server_name, player_name)
-            VALUES ('{data["AlderonId"]}', '{data["ServerGuid"]}', '{data["ServerName"]}', '{data["PlayerName"]}');"""
+            VALUES ('{data["AlderonId"]}',
+            '{data["ServerGuid"]}',
+            '{data["ServerName"]}',
+            '{data["PlayerName"]}');"""
     )
     return "Sucesso", 200
 
 
-# @app.rout('/pot/payment')
+@app.route('/pot/payment', methods=['POST'])
+def payment():
+    print(request.get_json())
+    return "Sucesso", 200
+
+
 if __name__ == '__main__':
     # run app in debug mode on port 80
     # app_server = WSGIServer(("127.0.0.1", 80), app)
     # app_server.serve_forever()
-    app.run(debug=True, port=80)
+    app.run(host='0.0.0.0', debug=True, port=80)
