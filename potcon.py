@@ -115,16 +115,10 @@ def killed():
 @app.route('/pot/server_error', methods=['POST'])
 def server_error():
     data = request.get_json()
-    mapped_data = {
-        "server_guid": data["ServerGuid"],
-        "server_ip": data["ServerIP"],
-        "server_name": data["ServerName"],
-        "uuid": data["UUID"],
-        "provider": data["Provider"],
-        "instance": data["Instance"],
-        "session": data["Session"],
-        "error_message": data["ErrorMesssage"]
-    }
+    sql_con.execute_query(
+        f"""INSERT INTO ancioes (server_guid, server_ip, server_name, uuid, provider, instance, session, error_message)
+            VALUES ('{data["ServerGuid"]}', '{data["ServerIP"]}', '{data["ServerName"]}', '{data["UUID"]}', '{data["Provider"]}', '{data["Instance"]}', '{data["Session"]}', '{data["ErrorMesssage"]}');"""
+    )
     sql_con.insert_json(table_name="server_error", json_data=mapped_data)
 
 
