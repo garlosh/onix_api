@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from classes import sqlHandler
 from classes import pathcon
 from utils import *
@@ -176,8 +176,24 @@ def login():
 
 @app.route('/pot/payment', methods=['POST'])
 def payment():
-    print(request.get_json())
-    return "Sucesso", 200
+    try:
+        # Obtém o corpo bruto da requisição
+        raw_data = request.data.decode('utf-8')
+
+        # Converte para um JSON válido substituindo aspas simples por aspas duplas
+        fixed_data = raw_data.replace("'", '"')
+
+        # Adiciona aspas duplas em torno das chaves, se necessário
+        # Usando json.loads para garantir que seja um JSON válido após a correção
+        parsed_data = json.loads(fixed_data)
+
+        # Processa o JSON recebido
+        print(parsed_data)
+        return jsonify({"message": "JSON received successfully"}), 200
+    except json.JSONDecodeError:
+        return jsonify({"error": "Invalid JSON format"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
