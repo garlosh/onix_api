@@ -1,24 +1,31 @@
 from flask import Flask, request, jsonify
-from classes import sqlHandler
+from sqlalchemy import text
 from classes import pathcon
-from utils import *
+from classes import sqlHandler
+from utils import calcular_tempo_total_jogador, log_regression, convert_to_geometry
 from random import choice
-from gevent.pywsgi import WSGIServer
 import json
+# Configuração do Flask
 app = Flask(__name__)
-sql_con = sqlHandler.Client('mysql', 'pymysql', 'adm',
-                            'cabeca0213', '127.0.0.1', '3306', 'projeto_onix')
+
+# Configuração do SQLHandler e RCON
+sql_con = sqlHandler.Client(
+    'mysql', 'pymysql', 'adm', 'cabeca0213', '127.0.0.1', '3306', 'projeto_onix')
 path_rcon_client = pathcon.client('127.0.0.1', 7779, 'Cucetinha')
 
+# Carregar configurações
 with open('config.json') as json_file:
     ancient_stats = json.load(json_file)
+
+sql_con.get_table_metadata("respawns")
+sql_con.get_table_metadata("ancioes")
 
 
 @app.route('/pot/respawn', methods=['POST'])
 def respawn():
     min_time, max_time = 8.0, 45.0
-
     data = request.get_json()
+
     player_name = data['PlayerName']
     alderon_id = data['PlayerAlderonId']
     dinosaur = data['CharacterName']
@@ -26,18 +33,34 @@ def respawn():
     growth = data['DinosaurGrowth']
     server_guid = data['ServerGuid']
 
-    sql_con.execute_query(
-        f"""INSERT INTO respawns (server_guid, id_alderon, nome_player, id_dino, nome_dino) \
-        VALUES ('{server_guid}', '{alderon_id}', '{player_name}', '{dinosaur_id}', '{dinosaur}');"""
-    )
+    # Obter metadados da tabela respawns
 
+    respawns_table = sql_con.TABLES["respawns"]
+
+    # Inserir respawn
+    insert_respawn = respawns_table.insert().values(
+        server_guid=server_guid,
+        id_alderon=alderon_id,
+        nome_player=player_name,
+        id_dino=dinosaur_id,
+        nome_dino=dinosaur
+    )
+    sql_con.execute_query(insert_respawn)
+
+    # Calcular tempo total jogado
     time_played = calcular_tempo_total_jogador(
         sql_con, alderon_id, dinosaur_id) / 3600
 
-    normal_ancient = sql_con.query_database(
-        f"""SELECT * FROM ancioes WHERE id_alderon = '{alderon_id}' AND id_dino = '{
-            dinosaur_id}' AND tipo_anciao = 'normal';"""
+    # Consultar ancião normal
+
+    ancioes_table = sql_con.TABLES["ancioes"]
+
+    normal_ancient_query = ancioes_table.select().where(
+        (ancioes_table.c.id_alderon == alderon_id) &
+        (ancioes_table.c.id_dino == dinosaur_id) &
+        (ancioes_table.c.tipo_anciao == 'normal')
     )
+    normal_ancient = sql_con.query_database(normal_ancient_query)
 
     if not normal_ancient.empty:
         ancient = normal_ancient.iloc[0]
@@ -52,19 +75,26 @@ def respawn():
     elif growth == 1.0 and time_played > min_time:
         stat = choice(list(ancient_stats.keys()))
         min_attr = ancient_stats[stat]['min']
-        sql_con.execute_query(
-            f"""INSERT INTO ancioes (id_alderon, nome_player, id_dino, nome_dino, stat1, tipo_anciao) \
-            VALUES ('{alderon_id}', '{player_name}', '{dinosaur_id}', '{dinosaur}', '{stat}', 'normal');"""
+        insert_anciao = ancioes_table.insert().values(
+            id_alderon=alderon_id,
+            nome_player=player_name,
+            id_dino=dinosaur_id,
+            nome_dino=dinosaur,
+            stat1=stat,
+            tipo_anciao='normal'
         )
+        sql_con.execute_query(insert_anciao)
         path_rcon_client.execute_rcommand(
-            f"""modattr {alderon_id} {stat} {min_attr}""")
+            f"modattr {alderon_id} {stat} {min_attr}")
         path_rcon_client.execute_rcommand(
             "systemmessageall Um dinosauro ancião conectou no servidor!")
 
-    special_ancient = sql_con.query_database(
-        f"""SELECT * FROM ancioes WHERE id_alderon = '{
-            alderon_id}' AND tipo_anciao = 'especial';"""
+    # Consultar ancião especial
+    special_ancient_query = ancioes_table.select().where(
+        (ancioes_table.c.id_alderon == alderon_id) &
+        (ancioes_table.c.tipo_anciao == 'especial')
     )
+    special_ancient = sql_con.query_database(special_ancient_query)
 
     if not special_ancient.empty:
         special = special_ancient.iloc[0]
@@ -86,12 +116,14 @@ def respawn():
 def leave():
     data = request.get_json()
     alderon_id = data['PlayerAlderonId']
-    sql_con.execute_query(f'''
-                        UPDATE respawns
-                        SET data_logout = NOW()
-                        WHERE id_alderon = '{alderon_id}';
-                        ''')
 
+    # Atualizar logout
+    respawns_table = sql_con.TABLES["respawns"]
+    update_logout = respawns_table.update().where(
+        respawns_table.c.id_alderon == alderon_id
+    ).values(data_logout=text("NOW()"))
+
+    sql_con.execute_query(update_logout)
     return 'Success', 200
 
 
@@ -101,81 +133,58 @@ def killed():
     victim = data['VictimCharacterName']
     alderon_id = data['VictimAlderonId']
     nome_player = data['VictimName']
-    sql_con.execute_query(f'''
-                        DELETE FROM ancioes
-                        WHERE id_alderon = '{alderon_id}' AND nome_player = '{nome_player}'
-                        AND nome_dino = '{victim}'
-                        AND tipo_anciao = 'normal';
-                        ''')
-    sql_con.execute_query(f'''
-                        DELETE FROM respawns
-                        WHERE id_alderon = '{alderon_id}'
-                        AND nome_player = '{nome_player}'
-                        AND nome_dino = '{victim}';
-                        ''')
-    return 'Success', 200
 
+    ancioes_table = sql_con.TABLES["ancioes"]
+    respawns_table = sql_con.TABLES["respawns"]
 
-@app.route('/pot/server_error', methods=['POST'])
-def server_error():
-    data = request.get_json()
-    sql_con.execute_query(
-        f"""INSERT INTO server_error (server_guid, server_ip, server_name, uuid, provider, instance, session, error_message)
-            VALUES ('{data["ServerGuid"]}',
-            '{data["ServerIP"]}',
-            '{data["ServerName"]}',
-            '{data["UUID"]}',
-            '{data["Provider"]}',
-            '{data["Instance"]}',
-            '{data["Session"]}',
-            '{data["ErrorMesssage"]}');"""
+    # Remover ancião normal
+    delete_anciao = ancioes_table.delete().where(
+        (ancioes_table.c.id_alderon == alderon_id) &
+        (ancioes_table.c.nome_player == nome_player) &
+        (ancioes_table.c.nome_dino == victim) &
+        (ancioes_table.c.tipo_anciao == 'normal')
     )
-    sql_con.insert_json(table_name="server_error", json_data=mapped_data)
+    sql_con.execute_query(delete_anciao)
 
+    # Remover respawn correspondente
+    delete_respawn = respawns_table.delete().where(
+        (respawns_table.c.id_alderon == alderon_id) &
+        (respawns_table.c.nome_player == nome_player) &
+        (respawns_table.c.nome_dino == victim)
+    )
+    sql_con.execute_query(delete_respawn)
 
-@app.route('/pot/player_report', methods=['POST'])
-def player_report():
-    data = request.get_json()
-    mapped_data = {
-        "server_guid": data["ServerGuid"],
-        "reporter_player_name": data["ReporterPlayerName"],
-        "reporter_player_id": data["ReporterAlderonId"],
-        "server_name": data["ServerName"],
-        "reporeted_player_name": data["ReportedPlayerName"],
-        "reported_alderon_id": data["ReportedAlderonId"],
-        "reported_platform": data["ReportedPlatform"],
-        "report_reason": data["ReportReason"],
-        "recent_damage_causer_ids": data["RecentDamageCauserIDs"],
-        "nearby_players_id": data["NearbyPlayerIDs"],
-        "title": data["Title"],
-        "message": data["Message"],
-        "location": convert_to_geometry(data["Location"]),
-        "platform": data["Platform"],
-    }
-    sql_con.insert_json(table_name="player_report", json_data=mapped_data)
-
-
-@app.route('/pot/server_start', methods=['POST'])
-def server_start():
-    path_rcon_client.execute_rcommand("loadcreatormode 1")
-    return "Sucesso", 200
+    return 'Success', 200
 
 
 @app.route('/pot/login', methods=['POST'])
 def login():
     data = request.get_json()
-    sql_con.execute_query(
-        f"""INSERT IGNORE INTO jogadores (id_alderon, server_guid, server_name, player_name)
-            VALUES ('{data["AlderonId"]}',
-            '{data["ServerGuid"]}',
-            '{data["ServerName"]}',
-            '{data["PlayerName"]}');"""
+
+    # Obter metadados da tabela jogadores
+    sql_con.get_table_metadata("jogadores")
+    jogadores_table = sql_con.TABLES["jogadores"]
+
+    # Inserir ou ignorar dados do jogador
+    insert_jogador = jogadores_table.insert().prefix_with('IGNORE').values(
+        id_alderon=data["AlderonId"],
+        server_guid=data["ServerGuid"],
+        server_name=data["ServerName"],
+        player_name=data["PlayerName"]
     )
+
+    sql_con.execute_query(insert_jogador)
+
+    return "Sucesso", 200
+
+
+@app.route('/pot/server_start', methods=['POST'])
+def server_start():
+    # Comando RCON para iniciar o modo de criador
+    path_rcon_client.execute_rcommand("loadcreatormode 1")
+
     return "Sucesso", 200
 
 
 if __name__ == '__main__':
-    # run app in debug mode on port 80
-    # app_server = WSGIServer(("127.0.0.1", 80), app)
-    # app_server.serve_forever()
     app.run(host='0.0.0.0', debug=True, port=7001)

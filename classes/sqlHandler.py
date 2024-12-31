@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from sqlalchemy import create_engine, text, Table, MetaData, insert
 import pandas as pd
+from typing import Dict
 
 
 @dataclass
@@ -17,7 +18,12 @@ class Client:
         DATABASE_URI = f'{self.DB_TYPE}+{self.DB_DRIVER}://{self.DB_USER}:{
             self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
         self.ENGINE = create_engine(DATABASE_URI)
-        # self.METADATA = MetaData(bind=self.ENGINE)
+        self.METADATA = MetaData()
+        self.TABLES: Dict[str, Table] = {}
+
+    def get_table_metadata(self, table_name: str) -> None:
+        self.TABLES[table_name] = Table(
+            table_name, self.METADATA, autoload_with=self.ENGINE)
 
     def execute_query(self, query) -> None:
         with self.ENGINE.connect() as connection:
@@ -37,26 +43,9 @@ class Client:
         except:
             return False
 
-    def insert_json(self, table_name: str, json_data: dict) -> None:
-        """
-        Insere um JSON em uma tabela existente no banco de dados.
 
-        Args:
-            table_name (str): Nome da tabela no banco de dados.
-            json_data (dict): Dicionário contendo os dados a serem inseridos.
-        """
-        try:
-            # Refletir a tabela existente
-            table = Table(table_name, self.METADATA, autoload_with=self.ENGINE)
-
-            # Criar instrução de inserção
-            stmt = insert(table).values(json_data)
-
-            # Executar a instrução
-            with self.ENGINE.connect() as connection:
-                connection.execute(stmt)
-                connection.commit()
-
-            print(f"JSON inserido com sucesso na tabela '{table_name}'.")
-        except Exception as e:
-            print(f"Erro ao inserir JSON na tabela '{table_name}': {e}")
+if __name__ == "__main__":
+    sql_con = Client('mysql', 'pymysql', 'adm',
+                     'cabeca0213', '192.168.0.134', '3306', 'projeto_onix')
+    sql_con.get_table_metadata("respawns")
+    print(sql_con.TABLES['respawns'].select())
