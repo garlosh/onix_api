@@ -26,8 +26,15 @@ class Client:
             table_name, self.METADATA, autoload_with=self.ENGINE)
 
     def execute_query(self, query) -> None:
+        """
+        Executa uma consulta SQLAlchemy ou uma string de consulta SQL.
+        """
         with self.ENGINE.connect() as connection:
-            connection.execute(text(query))
+            if isinstance(query, (str, text)):
+                connection.execute(text(query))
+            else:
+                # Para objetos SQLAlchemy como Insert, Update, etc.
+                connection.execute(query)
             connection.commit()
 
     def query_database(self, query) -> pd.DataFrame:
