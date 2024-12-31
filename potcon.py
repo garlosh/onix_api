@@ -19,6 +19,10 @@ with open('config.json') as json_file:
 
 sql_con.get_table_metadata("respawns")
 sql_con.get_table_metadata("ancioes")
+sql_con.get_table_metadata("server_error")
+sql_con.get_table_metadata("jogadores")
+sql_con.get_table_metadata("player_report")
+sql_con.get_table_metadata("admin_commands")
 
 
 @app.route('/pot/respawn', methods=['POST'])
@@ -161,8 +165,6 @@ def killed():
 def login():
     data = request.get_json()
 
-    # Obter metadados da tabela jogadores
-    sql_con.get_table_metadata("jogadores")
     jogadores_table = sql_con.TABLES["jogadores"]
 
     # Inserir ou ignorar dados do jogador
@@ -183,6 +185,92 @@ def server_start():
     # Comando RCON para iniciar o modo de criador
     path_rcon_client.execute_rcommand("loadcreatormode 1")
 
+    return "Sucesso", 200
+
+
+@app.route('/pot/server_error', methods=['POST'])
+def server_error():
+    data = request.get_json()
+
+    server_error_table = sql_con.TABLES["server_error"]
+    # Inserir respawn
+    insert_respawn = server_error_table.insert().values(
+        server_guid=data['ServerGuid'],
+        server_ip=data['ServerIP'],
+        server_name=data['ServerName'],
+        uuid=data['UUID'],
+        provider=data['Provider'],
+        instance=data['Instance'],
+        session=data['Session'],
+        error_message=data['ErrorMesssage']
+    )
+    sql_con.execute_query(insert_respawn)
+    return "Sucesso", 200
+
+
+@app.route('/pot/player_report', methods=['POST'])
+def player_report():
+    data = request.get_json()
+
+    player_report_table = sql_con.TABLES['player_report']
+    # Inserir respawn
+    insert_report = player_report_table.insert().values(
+        server_guid=data['ServerGuid'],
+        reporter_player_name=data['ReporterPlayerName'],
+        reporter_player_id=data['ReporterAlderonId'],
+        server_name=data['ServerName'],
+        reported_player_name=data['ReportedPlayerName'],
+        reported_alderon_id=data['ReportedAlderonId'],
+        reported_platform=data['ReportedPlatform'],
+        report_type=data['ReportType'],
+        report_reason=data['ReportReason'],
+        recent_damage_causer_ids=data['RecentDamageCauserIDs'],
+        nearby_players_id=data['NearbyPlayerIDs'],
+        title=data['Title'],
+        message=data['Message'],
+        location=convert_to_geometry(data['Location']),
+        platform=data['Platform']
+    )
+    sql_con.execute_query(insert_report)
+    return "Sucesso", 200
+
+
+@app.route('/pot/bad_average_tick', methods=['POST'])
+def bad_average_tick():
+    data = request.get_json()
+
+    bad_average_tick_table = sql_con.TABLES['player_report']
+    # Inserir respawn
+    insert_tick = bad_average_tick_table.insert().values(
+        server_guid=data['ServerGuid'],
+        server_ip=data['ServerIP'],
+        server_name=data['ServerName'],
+        uuid=data['UUID'],
+        provider=data['Provider'],
+        instance=data['Instance'],
+        session=data['Session'],
+        average_tick_rate=data['AverageTickRate'],
+        current_tick_rate=data['CurrentTickRate'],
+        player_count=data['PlayerCount']
+    )
+    sql_con.execute_query(insert_tick)
+    return "Sucesso", 200
+
+
+@app.route('/pot/admin_command', methods=['POST'])
+def admin_command():
+    data = request.get_json()
+
+    admin_command_table = sql_con.TABLES['player_report']
+    # Inserir respawn
+    insert_admin = admin_command_table.insert().values(
+        server_guid=data['ServerGuid'],
+        admin_name=data['AdminName'],
+        admin_id_alderon=data['AdminAlderonId'],
+        role=data['Role'],
+        command=data['Command'],
+    )
+    sql_con.execute_query(admin_command_table)
     return "Sucesso", 200
 
 
