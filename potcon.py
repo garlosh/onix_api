@@ -262,15 +262,20 @@ def admin_command():
     data = request.get_json()
 
     admin_command_table = sql_con.TABLES['player_report']
-    # Inserir respawn
+    # Tratar campos opcionais
+    # None se não estiver presente
+    admin_id_alderon = data.get('AdminAlderonId')
+    role = data.get('Role')  # None se não estiver presente
+
+    # Construir o comando de inserção com valores opcionais
     insert_admin = admin_command_table.insert().values(
         server_guid=data['ServerGuid'],
         admin_name=data['AdminName'],
-        admin_id_alderon=data['AdminAlderonId'],
-        role=data['Role'],
+        admin_id_alderon=admin_id_alderon,
+        role=role,
         command=data['Command'],
     )
-    sql_con.execute_query(admin_command_table)
+    sql_con.execute_query(insert_admin)
     return "Sucesso", 200
 
 
