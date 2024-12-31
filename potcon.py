@@ -16,7 +16,7 @@ with open('config.json') as json_file:
 
 @app.route('/pot/respawn', methods=['POST'])
 def respawn():
-    min_time, max_time = 15.0, 45.0
+    min_time, max_time = 8.0, 45.0
 
     data = request.get_json()
     player_name = data['PlayerName']
@@ -172,28 +172,6 @@ def login():
             '{data["PlayerName"]}');"""
     )
     return "Sucesso", 200
-
-
-@app.route('/pot/payment', methods=['POST'])
-def payment():
-    try:
-        # Obtém o corpo bruto da requisição
-        raw_data = request.data.decode('utf-8')
-
-        # Converte para um JSON válido substituindo aspas simples por aspas duplas
-        fixed_data = raw_data.replace("'", '"')
-
-        # Adiciona aspas duplas em torno das chaves, se necessário
-        # Usando json.loads para garantir que seja um JSON válido após a correção
-        parsed_data = json.loads(fixed_data)
-
-        # Processa o JSON recebido
-        print(parsed_data)
-        return jsonify({"message": "JSON received successfully"}), 200
-    except json.JSONDecodeError:
-        return jsonify({"error": "Invalid JSON format"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
