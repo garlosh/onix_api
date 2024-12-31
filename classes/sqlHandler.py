@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from sqlalchemy import create_engine, text, Table, MetaData, insert
+from sqlalchemy.sql import Insert, Update, Delete
+from sqlalchemy.sql.expression import TextClause
 import pandas as pd
 from typing import Dict
 
@@ -25,16 +27,20 @@ class Client:
         self.TABLES[table_name] = Table(
             table_name, self.METADATA, autoload_with=self.ENGINE)
 
-    def execute_query(self, query) -> None:
+    def execute_query(self, query):
         """
         Executa uma consulta SQLAlchemy ou uma string de consulta SQL.
         """
         with self.ENGINE.connect() as connection:
-            if isinstance(query, (str, text)):
+            # Verifica se é uma string ou cláusula textual
+            if isinstance(query, (str, TextClause)):
                 connection.execute(text(query))
-            else:
-                # Para objetos SQLAlchemy como Insert, Update, etc.
+            # Verifica se é um objeto SQLAlchemy
+            elif isinstance(query, (Insert, Update, Delete)):
                 connection.execute(query)
+            else:
+                raise ValueError(
+                    f"Tipo de consulta não suportado: {type(query)}")
             connection.commit()
 
     def query_database(self, query) -> pd.DataFrame:
