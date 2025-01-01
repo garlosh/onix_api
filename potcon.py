@@ -120,11 +120,12 @@ def respawn():
 def leave():
     data = request.get_json()
     alderon_id = data['PlayerAlderonId']
-
+    nome_dino = data['CharacterName']
     # Atualizar logout
     respawns_table = sql_con.TABLES["respawns"]
     update_logout = respawns_table.update().where(
-        respawns_table.c.id_alderon == alderon_id
+        (respawns_table.c.id_alderon == alderon_id) &
+        (respawns_table.c.nome_dino == nome_dino)
     ).values(data_logout=text("NOW()"))
 
     sql_con.execute_query(update_logout)
