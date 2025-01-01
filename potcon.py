@@ -137,15 +137,15 @@ def leave():
         .limit(1)
     )
 
-    # Executa a subconsulta para obter o ID
-    # Use o método apropriado do SQLAlchemy para extrair o valor
-    result = sql_con.session.execute(subquery).scalar()
+    # Executa a subconsulta usando sql_con
+    result = sql_con.execute_query(subquery)
+    id_to_update = result.scalar() if result else None
 
-    if result:
+    if id_to_update:
         # Atualizar logout do registro mais recente
         update_logout = (
             respawns_table.update()
-            .where(respawns_table.c.id == result)
+            .where(respawns_table.c.id == id_to_update)
             .values(data_logout=text("NOW()"))
         )
         sql_con.execute_query(update_logout)
