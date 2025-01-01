@@ -1,3 +1,4 @@
+from sqlalchemy.sql import text
 from flask import Flask, request, jsonify
 from sqlalchemy import text, select
 from classes import pathcon
@@ -125,7 +126,7 @@ def leave():
     # Tabela de respawns
     respawns_table = sql_con.TABLES["respawns"]
 
-    # Subconsulta para obter o registro mais recente
+    # Subconsulta para obter o registro mais recente em uma tabela temporária
     subquery = (
         select(respawns_table.c.id)
         .where(
@@ -134,17 +135,23 @@ def leave():
         )
         .order_by(respawns_table.c.data_login.desc())
         .limit(1)
-    )
+    ).alias('subquery')
 
-    # Atualizar logout do registro mais recente
-    update_logout = (
-        respawns_table.update()
-        .where(respawns_table.c.id == subquery.as_scalar())
-        .values(data_logout=text("NOW()"))
-    )
+    # Recupera o ID da subconsulta primeiro
+    result = sql_con.execute_query(subquery)
+    id_to_update = result.scalar()
 
-    sql_con.execute_query(update_logout)
-    return 'Success', 200
+    if id_to_update:
+        # Atualizar logout do registro mais recente
+        update_logout = (
+            respawns_table.update()
+            .where(respawns_table.c.id == id_to_update)
+            .values(data_logout=text("NOW()"))
+        )
+        sql_con.execute_query(update_logout)
+        return 'Success', 200
+    else:
+        return 'No matching record found', 404
 
 
 @app.route('/pot/killed', methods=['POST'])
