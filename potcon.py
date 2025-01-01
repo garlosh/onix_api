@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from sqlalchemy import text
+from sqlalchemy import text, select
 from classes import pathcon
 from classes import sqlHandler
 from utils import calcular_tempo_total_jogador, log_regression, convert_to_geometry
@@ -121,12 +121,27 @@ def leave():
     data = request.get_json()
     alderon_id = data['PlayerAlderonId']
     nome_dino = data['CharacterName']
-    # Atualizar logout
+
+    # Tabela de respawns
     respawns_table = sql_con.TABLES["respawns"]
-    update_logout = respawns_table.update().where(
-        (respawns_table.c.id_alderon == alderon_id) &
-        (respawns_table.c.nome_dino == nome_dino)
-    ).values(data_logout=text("NOW()"))
+
+    # Subconsulta para obter o registro mais recente
+    subquery = (
+        select([respawns_table.c.id])
+        .where(
+            (respawns_table.c.id_alderon == alderon_id) &
+            (respawns_table.c.nome_dino == nome_dino)
+        )
+        .order_by(respawns_table.c.data_login.desc())
+        .limit(1)
+    )
+
+    # Atualizar logout do registro mais recente
+    update_logout = (
+        respawns_table.update()
+        .where(respawns_table.c.id == subquery.as_scalar())
+        .values(data_logout=text("NOW()"))
+    )
 
     sql_con.execute_query(update_logout)
     return 'Success', 200
