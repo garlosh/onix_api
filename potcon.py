@@ -261,7 +261,7 @@ def bad_average_tick():
 def admin_command():
     data = request.get_json()
 
-    admin_command_table = sql_con.TABLES['player_report']
+    admin_command_table = sql_con.TABLES['admin_commands']
     # Tratar campos opcionais
     # None se não estiver presente
     admin_id_alderon = data.get('AdminAlderonId')
