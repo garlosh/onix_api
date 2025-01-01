@@ -126,7 +126,7 @@ def leave():
     # Tabela de respawns
     respawns_table = sql_con.TABLES["respawns"]
 
-    # Subconsulta para obter o registro mais recente em uma tabela temporária
+    # Subconsulta para obter o registro mais recente
     subquery = (
         select(respawns_table.c.id)
         .where(
@@ -135,17 +135,17 @@ def leave():
         )
         .order_by(respawns_table.c.data_login.desc())
         .limit(1)
-    ).alias('subquery')
+    )
 
-    # Recupera o ID da subconsulta primeiro
-    result = sql_con.execute_query(subquery)
-    id_to_update = result.scalar()
+    # Executa a subconsulta para obter o ID
+    # Use o método apropriado do SQLAlchemy para extrair o valor
+    result = sql_con.session.execute(subquery).scalar()
 
-    if id_to_update:
+    if result:
         # Atualizar logout do registro mais recente
         update_logout = (
             respawns_table.update()
-            .where(respawns_table.c.id == id_to_update)
+            .where(respawns_table.c.id == result)
             .values(data_logout=text("NOW()"))
         )
         sql_con.execute_query(update_logout)
