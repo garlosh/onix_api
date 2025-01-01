@@ -127,7 +127,7 @@ def leave():
 
     # Subconsulta para obter o registro mais recente
     subquery = (
-        select([respawns_table.c.id])
+        select(respawns_table.c.id)
         .where(
             (respawns_table.c.id_alderon == alderon_id) &
             (respawns_table.c.nome_dino == nome_dino)
