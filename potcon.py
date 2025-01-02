@@ -1,8 +1,7 @@
 from sqlalchemy.sql import text
-from flask import Flask, request, jsonify
+from flask import Flask, request
 from sqlalchemy import text, select
-from classes import pathcon
-from classes import sqlHandler
+from classes import pathcon, sqlHandler
 from utils import calcular_tempo_total_jogador, log_regression, convert_to_geometry
 from random import choice
 import json
@@ -127,18 +126,14 @@ def leave():
     respawns_table = sql_con.TABLES["respawns"]
 
     # Subconsulta para obter o registro mais recente
-    subquery = (
-        select(respawns_table.c.id)
-        .where(
-            (respawns_table.c.id_alderon == alderon_id) &
-            (respawns_table.c.nome_dino == nome_dino)
-        )
-        .order_by(respawns_table.c.data_login.desc())
-        .limit(1)
-    )
+    subquery = select(respawns_table.c.id).where(
+        (respawns_table.c.id_alderon == alderon_id) &
+        (respawns_table.c.nome_dino == nome_dino)
+    ).order_by(respawns_table.c.data_login.desc()).limit(1)
 
     # Executa a subconsulta usando sql_con
     result = sql_con.execute_query(subquery)
+    print(result)
     id_to_update = result.scalar() if result else None
 
     if id_to_update:
