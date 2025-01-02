@@ -133,7 +133,6 @@ def leave():
 
     # Executa a subconsulta usando sql_con
     result = sql_con.execute_query(subquery)
-    print(result)
     id_to_update = result.scalar() if result else None
 
     if id_to_update:
@@ -154,7 +153,6 @@ def killed():
     data = request.get_json()
     victim = data['VictimCharacterName']
     alderon_id = data['VictimAlderonId']
-    nome_player = data['VictimName']
 
     ancioes_table = sql_con.TABLES["ancioes"]
     respawns_table = sql_con.TABLES["respawns"]
@@ -162,7 +160,6 @@ def killed():
     # Remover ancião normal
     delete_anciao = ancioes_table.delete().where(
         (ancioes_table.c.id_alderon == alderon_id) &
-        (ancioes_table.c.nome_player == nome_player) &
         (ancioes_table.c.nome_dino == victim) &
         (ancioes_table.c.tipo_anciao == 'normal')
     )
@@ -171,7 +168,6 @@ def killed():
     # Remover respawn correspondente
     delete_respawn = respawns_table.delete().where(
         (respawns_table.c.id_alderon == alderon_id) &
-        (respawns_table.c.nome_player == nome_player) &
         (respawns_table.c.nome_dino == victim)
     )
     sql_con.execute_query(delete_respawn)
