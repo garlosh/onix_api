@@ -34,14 +34,19 @@ class Client:
         with self.ENGINE.connect() as connection:
             # Verifica se é uma string ou cláusula textual
             if isinstance(query, (str, TextClause)):
-                connection.execute(text(query))
-            # Verifica se é um objeto SQLAlchemy
+                result = connection.execute(text(query))
+            # Verifica se é uma operação de escrita (Insert, Update, Delete)
             elif isinstance(query, (Insert, Update, Delete)):
-                connection.execute(query)
+                result = connection.execute(query)
+                connection.commit()  # Confirma operações de escrita
+            # Verifica se é uma consulta Select
+            elif isinstance(query, Select):
+                # Retorna resultados diretamente
+                result = connection.execute(query)
             else:
                 raise ValueError(
                     f"Tipo de consulta não suportado: {type(query)}")
-            connection.commit()
+            return result
 
     def query_database(self, query) -> pd.DataFrame:
         resultado = pd.read_sql(query, con=self.ENGINE)
