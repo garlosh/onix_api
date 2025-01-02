@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from sqlalchemy import create_engine, text, Table, MetaData, insert
-from sqlalchemy.sql import Insert, Update, Delete
+from sqlalchemy.sql import Insert, Update, Delete, Select
 from sqlalchemy.sql.expression import TextClause
 import pandas as pd
 from typing import Dict
