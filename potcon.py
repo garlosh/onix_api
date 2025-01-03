@@ -121,7 +121,9 @@ def leave():
     data = request.get_json()
     alderon_id = data['PlayerAlderonId']
     nome_dino = data['CharacterName']
-
+    from_death = bool(data['FromDeath'])
+    if from_death:
+        return "Success", 208
     # Tabela de respawns
     respawns_table = sql_con.TABLES["respawns"]
 
