@@ -73,7 +73,7 @@ def respawn():
         stat_increase = log_regression(
             min_time, min_attr, max_time, max_attr, time_played)
         path_rcon_client.execute_rcommand(
-            f"modattr {alderon_id} {stat} {stat_increase:.2f}")
+            f"modattr {alderon_id} {stat} {int(stat_increase)}")
         path_rcon_client.execute_rcommand(
             "systemmessageall Um dinosauro ancião conectou no servidor!")
     elif growth == 1.0 and time_played > min_time:
