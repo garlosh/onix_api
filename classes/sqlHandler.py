@@ -20,12 +20,13 @@ class Client:
         DATABASE_URI = f'{self.DB_TYPE}+{self.DB_DRIVER}://{self.DB_USER}:{
             self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
         self.ENGINE = create_engine(DATABASE_URI)
-        self.METADATA = MetaData()
+        self.METADATA: Dict[str, MetaData] = {}
         self.TABLES: Dict[str, Table] = {}
 
     def get_table_metadata(self, table_name: str) -> None:
+        self.METADATA[table_name] = MetaData()
         self.TABLES[table_name] = Table(
-            table_name, self.METADATA, autoload_with=self.ENGINE)
+            table_name, self.METADATA[table_name], autoload_with=self.ENGINE)
 
     def execute_query(self, query):
         """
