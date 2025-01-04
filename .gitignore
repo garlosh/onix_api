@@ -170,3 +170,4 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 netherbot.code-workspace
+workspace.code-workspace
