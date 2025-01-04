@@ -1,10 +1,16 @@
+# Imports princiapis
 from sqlalchemy.sql import text
 from flask import Flask, request
 from sqlalchemy import text, select
-from classes import pathcon, sqlHandler
-from utils import calcular_tempo_total_jogador, log_regression, convert_to_geometry
 from random import choice
 import json
+import sys
+import os
+
+# Import das classess
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from common import pathcon, sqlHandler
+from utils import calcular_tempo_total_jogador, log_regression, convert_to_geometry
 # Configuração do Flask
 app = Flask(__name__)
 
