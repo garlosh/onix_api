@@ -295,5 +295,34 @@ def admin_command():
     return "Sucesso", 200
 
 
+@app.route('/pot/spectate', methods=['POST'])
+def spectate():
+    data = request.get_json()
+    alderon_id = data['PlayerAlderonId']
+    # Tabela de respawns
+    respawns_table = sql_con.TABLES["respawns"]
+
+    # Subconsulta para obter o registro mais recente
+    subquery = select(respawns_table.c.id).where(
+        (respawns_table.c.id_alderon == alderon_id)
+    ).order_by(respawns_table.c.data_login.desc()).limit(1)
+
+    # Executa a subconsulta usando sql_con
+    result = sql_con.execute_query(subquery)
+    id_to_update = result.scalar() if result else None
+
+    if id_to_update:
+        # Atualizar logout do registro mais recente
+        update_logout = (
+            respawns_table.update()
+            .where(respawns_table.c.id == id_to_update)
+            .values(data_logout=text("NOW()"))
+        )
+        sql_con.execute_query(update_logout)
+        return 'Success', 200
+    else:
+        return 'No matching record found', 404
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=7001)
