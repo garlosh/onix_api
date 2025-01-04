@@ -1,4 +1,4 @@
-from classes import sqlHandler
+from common import sqlHandler
 import numpy as np
 import re
 
