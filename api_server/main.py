@@ -304,7 +304,7 @@ def admin_command():
 @app.route('/pot/spectate', methods=['POST'])
 def spectate():
     data = request.get_json()
-    alderon_id = data['PlayerAlderonId']
+    alderon_id = data['AdminAlderonId']
     # Tabela de respawns
     respawns_table = sql_con.TABLES["respawns"]
 
