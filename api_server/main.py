@@ -33,7 +33,7 @@ sql_con.get_table_metadata("admin_commands")
 
 @app.route('/pot/respawn', methods=['POST'])
 def respawn():
-    min_time, max_time = 8.0, 45.0
+    min_time, max_time = 6.0, 45.0
     data = request.get_json()
 
     player_name = data['PlayerName']
