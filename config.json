@@ -1,18 +1,22 @@
 {
  "MaxHealth": {
   "min": 10,
-  "max": 70
+  "max": 80
  },
  "Armor": {
   "min": 0.01,
   "max": 0.1
  },
  "CombatWeight": {
-  "min": 100,
-  "max": 325
+  "min": 60,
+  "max": 350
  },
  "MaxStamina": {
-  "min": 5,
+  "min": 10,
   "max": 40
+ },
+ "DamageMultiplier": {
+  "min": 0.01,
+  "max": 0.08
  }
 }
