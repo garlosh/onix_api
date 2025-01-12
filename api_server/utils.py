@@ -22,7 +22,7 @@ def log_regression(x1, y_min, x2, y_max, val):
 
     # Retornar a função logarítmica
 
-    return min(a * np.log(val) + b, y_max)
+    return max(min(a * np.log(val) + b, y_max), y_min)
 
 
 def calcular_tempo_total_jogador(client: sqlHandler.Client, player_id: str, dino: str) -> float:
