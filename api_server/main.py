@@ -95,7 +95,7 @@ def respawn():
         )
         sql_con.execute_query(insert_anciao)
         path_rcon_client.execute_rcommand(
-            f"modattr {alderon_id} {stat} {min_attr}")
+            f"modattr {alderon_id} {stat} {int(stat_increase)}")
         path_rcon_client.execute_rcommand(
             "systemmessageall Um dinosauro ancião conectou no servidor!")
 
