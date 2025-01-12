@@ -73,7 +73,7 @@ def respawn():
     with sql_con.ENGINE.connect() as connection:
         normal_ancient = connection.execute(normal_ancient_query).fetchone()
     if normal_ancient:
-        stat = normal_ancient.c.stat1
+        stat = normal_ancient.stat1
         min_attr, max_attr = ancient_stats[stat]['min'], ancient_stats[stat]['max']
         stat_increase = log_regression(
             min_time, min_attr, max_time, max_attr, time_played)
