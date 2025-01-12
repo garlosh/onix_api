@@ -70,8 +70,8 @@ def respawn():
         (ancioes_table.c.id_dino == dinosaur_id) &
         (ancioes_table.c.tipo_anciao == 'normal')
     )
-    normal_ancient = sql_con.query_database(normal_ancient_query)
-
+    with sql_con.ENGINE.connect() as connection:
+        normal_ancient = connection.execute(normal_ancient_query).fetchone()
     if not normal_ancient.empty:
         ancient = normal_ancient.iloc[0]
         stat = ancient['stat1']
