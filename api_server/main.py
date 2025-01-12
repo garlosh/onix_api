@@ -74,7 +74,7 @@ def respawn():
         normal_ancient = connection.execute(normal_ancient_query).fetchone()
     if not normal_ancient:
         ancient = normal_ancient.iloc[0]
-        stat = ancient['stat1']
+        stat = ancient.stat1
         min_attr, max_attr = ancient_stats[stat]['min'], ancient_stats[stat]['max']
         stat_increase = log_regression(
             min_time, min_attr, max_time, max_attr, time_played)
