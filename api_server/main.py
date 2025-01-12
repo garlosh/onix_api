@@ -96,7 +96,7 @@ def respawn():
         with sql_con.ENGINE.connect() as connection:
             normal_ancient = connection.execute(insert_anciao)
         path_rcon_client.execute_rcommand(
-            f"modattr {alderon_id} {stat} {round(stat_increase, 2)}")
+            f"modattr {alderon_id} {stat} {round(min_attr, 2)}")
         path_rcon_client.execute_rcommand(
             "systemmessageall Um dinosauro ancião conectou no servidor!")
 
