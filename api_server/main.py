@@ -78,7 +78,7 @@ def respawn():
         stat_increase = log_regression(
             min_time, min_attr, max_time, max_attr, time_played)
         path_rcon_client.execute_rcommand(
-            f"modattr {alderon_id} {stat} {int(stat_increase)}")
+            f"modattr {alderon_id} {stat} {round(stat_increase, 2)}")
         path_rcon_client.execute_rcommand(
             "systemmessageall Um dinosauro ancião conectou no servidor!")
     elif growth == 1.0 and time_played > min_time:
@@ -96,7 +96,7 @@ def respawn():
         with sql_con.ENGINE.connect() as connection:
             normal_ancient = connection.execute(insert_anciao)
         path_rcon_client.execute_rcommand(
-            f"modattr {alderon_id} {stat} {int(stat_increase)}")
+            f"modattr {alderon_id} {stat} {round(stat_increase, 2)}")
         path_rcon_client.execute_rcommand(
             "systemmessageall Um dinosauro ancião conectou no servidor!")
 
