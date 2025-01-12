@@ -72,7 +72,7 @@ def respawn():
     )
     with sql_con.ENGINE.connect() as connection:
         normal_ancient = connection.execute(normal_ancient_query).fetchone()
-    if not normal_ancient.empty:
+    if not normal_ancient:
         ancient = normal_ancient.iloc[0]
         stat = ancient['stat1']
         min_attr, max_attr = ancient_stats[stat]['min'], ancient_stats[stat]['max']
