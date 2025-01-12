@@ -78,6 +78,8 @@ def respawn():
         min_attr, max_attr = ancient_stats[stat]['min'], ancient_stats[stat]['max']
         stat_increase = log_regression(
             min_time, min_attr, max_time, max_attr, time_played)
+        print(f"modattr {alderon_id} {stat} {int(stat_increase)}")
+        print(stat_increase)
         path_rcon_client.execute_rcommand(
             f"modattr {alderon_id} {stat} {int(stat_increase)}")
         path_rcon_client.execute_rcommand(
@@ -85,6 +87,7 @@ def respawn():
     elif growth == 1.0 and time_played > min_time:
         stat = choice(list(ancient_stats.keys()))
         min_attr = ancient_stats[stat]['min']
+
         insert_anciao = ancioes_table.insert().values(
             id_alderon=alderon_id,
             nome_player=player_name,
