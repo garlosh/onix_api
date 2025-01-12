@@ -72,8 +72,8 @@ def respawn():
     )
     with sql_con.ENGINE.connect() as connection:
         normal_ancient = connection.execute(normal_ancient_query).fetchone()
-    if not normal_ancient:
-        stat = normal_ancient.stat1
+    if normal_ancient:
+        stat = normal_ancient.c.stat1
         min_attr, max_attr = ancient_stats[stat]['min'], ancient_stats[stat]['max']
         stat_increase = log_regression(
             min_time, min_attr, max_time, max_attr, time_played)
@@ -93,7 +93,8 @@ def respawn():
             stat1=stat,
             tipo_anciao='normal'
         )
-        sql_con.execute_query(insert_anciao)
+        with sql_con.ENGINE.connect() as connection:
+            normal_ancient = connection.execute(insert_anciao)
         path_rcon_client.execute_rcommand(
             f"modattr {alderon_id} {stat} {int(stat_increase)}")
         path_rcon_client.execute_rcommand(
