@@ -73,13 +73,10 @@ def respawn():
     with sql_con.ENGINE.connect() as connection:
         normal_ancient = connection.execute(normal_ancient_query).fetchone()
     if not normal_ancient:
-        ancient = normal_ancient.iloc[0]
-        stat = ancient.stat1
+        stat = normal_ancient.stat1
         min_attr, max_attr = ancient_stats[stat]['min'], ancient_stats[stat]['max']
         stat_increase = log_regression(
             min_time, min_attr, max_time, max_attr, time_played)
-        print(f"modattr {alderon_id} {stat} {int(stat_increase)}")
-        print(stat_increase)
         path_rcon_client.execute_rcommand(
             f"modattr {alderon_id} {stat} {int(stat_increase)}")
         path_rcon_client.execute_rcommand(
@@ -103,24 +100,25 @@ def respawn():
             "systemmessageall Um dinosauro ancião conectou no servidor!")
 
     # Consultar ancião especial
-    special_ancient_query = ancioes_table.select().where(
-        (ancioes_table.c.id_alderon == alderon_id) &
-        (ancioes_table.c.tipo_anciao == 'especial')
-    )
-    special_ancient = sql_con.query_database(special_ancient_query)
+    # special_ancient_query = ancioes_table.select().where(
+    #    (ancioes_table.c.id_alderon == alderon_id) &
+    #    (ancioes_table.c.tipo_anciao == 'especial')
+    # )
+    # with sql_con.ENGINE.connect() as connection:
+    #    special_ancient_query = connection.execute(normal_ancient_query).fetchone()
 
-    if not special_ancient.empty:
-        special = special_ancient.iloc[0]
-        for stat_key in ['stat1', 'stat2']:
-            stat = special[stat_key]
-            min_attr, max_attr = ancient_stats[stat]['min'], ancient_stats[stat]['max']
-            stat_increase = log_regression(
-                min_time, min_attr, max_time, max_attr, time_played)
-            path_rcon_client.execute_rcommand(
-                f"modattr {alderon_id} {stat} {stat_increase:.2f}")
+    # if not special_ancient_query.empty:
+    #    special = special_ancient_query.iloc[0]
+    #    for stat_key in ['stat1', 'stat2']:
+    #        stat = special[stat_key]
+    #        min_attr, max_attr = ancient_stats[stat]['min'], ancient_stats[stat]['max']
+    #        stat_increase = log_regression(
+    #            min_time, min_attr, max_time, max_attr, time_played)
+    #        path_rcon_client.execute_rcommand(
+    #            f"modattr {alderon_id} {stat} {stat_increase:.2f}")
 
-        path_rcon_client.execute_rcommand(
-            "systemmessageall Um dinosauro ancião conectou no servidor!")
+    #    path_rcon_client.execute_rcommand(
+    #        "systemmessageall Um dinosauro ancião conectou no servidor!")
 
     return 'Success', 200
 
