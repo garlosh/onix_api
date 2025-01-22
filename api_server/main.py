@@ -95,6 +95,7 @@ def respawn():
         )
         with sql_con.ENGINE.connect() as connection:
             normal_ancient = connection.execute(insert_anciao)
+            connection.commit()
         path_rcon_client.execute_rcommand(
             f"modattr {alderon_id} {stat} {round(min_attr, 2)}")
         path_rcon_client.execute_rcommand(
