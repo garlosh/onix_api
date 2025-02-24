@@ -1,7 +1,5 @@
-# Imports princiapis
-from sqlalchemy.sql import text
-from flask import Flask, request
-from sqlalchemy import text, select
+from fastapi import FastAPI, Request, HTTPException
+from sqlalchemy.sql import text, select
 from random import choice
 import json
 import sys
@@ -11,8 +9,9 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from common import pathcon, sqlHandler
 from utils import calcular_tempo_total_jogador, log_regression, convert_to_geometry
-# Configuração do Flask
-app = Flask(__name__)
+
+# Configuração do FastAPI
+app = FastAPI()
 
 # Configuração do SQLHandler e RCON
 sql_con = sqlHandler.Client(
@@ -31,10 +30,10 @@ sql_con.get_table_metadata("player_report")
 sql_con.get_table_metadata("admin_commands")
 
 
-@app.route('/pot/respawn', methods=['POST'])
-def respawn():
+@app.post('/pot/respawn')
+async def respawn(request: Request):
     min_time, max_time = 6.0, 45.0
-    data = request.get_json()
+    data = await request.json()
 
     player_name = data['PlayerName']
     alderon_id = data['PlayerAlderonId']
@@ -44,7 +43,6 @@ def respawn():
     server_guid = data['ServerGuid']
 
     # Obter metadados da tabela respawns
-
     respawns_table = sql_con.TABLES["respawns"]
 
     # Inserir respawn
@@ -62,7 +60,6 @@ def respawn():
         sql_con, alderon_id, dinosaur_id) / 3600
 
     # Consultar ancião normal
-
     ancioes_table = sql_con.TABLES["ancioes"]
 
     normal_ancient_query = ancioes_table.select().where(
@@ -101,38 +98,17 @@ def respawn():
         path_rcon_client.execute_rcommand(
             "systemmessageall Um dinosauro ancião conectou no servidor!")
 
-    # Consultar ancião especial
-    # special_ancient_query = ancioes_table.select().where(
-    #    (ancioes_table.c.id_alderon == alderon_id) &
-    #    (ancioes_table.c.tipo_anciao == 'especial')
-    # )
-    # with sql_con.ENGINE.connect() as connection:
-    #    special_ancient_query = connection.execute(normal_ancient_query).fetchone()
-
-    # if not special_ancient_query.empty:
-    #    special = special_ancient_query.iloc[0]
-    #    for stat_key in ['stat1', 'stat2']:
-    #        stat = special[stat_key]
-    #        min_attr, max_attr = ancient_stats[stat]['min'], ancient_stats[stat]['max']
-    #        stat_increase = log_regression(
-    #            min_time, min_attr, max_time, max_attr, time_played)
-    #        path_rcon_client.execute_rcommand(
-    #            f"modattr {alderon_id} {stat} {stat_increase:.2f}")
-
-    #    path_rcon_client.execute_rcommand(
-    #        "systemmessageall Um dinosauro ancião conectou no servidor!")
-
-    return 'Success', 200
+    return {"message": "Success"}
 
 
-@app.route('/pot/leave', methods=['POST'])
-def leave():
-    data = request.get_json()
+@app.post('/pot/leave')
+async def leave(request: Request):
+    data = await request.json()
     alderon_id = data['PlayerAlderonId']
     nome_dino = data['CharacterName']
     from_death = bool(data['FromDeath'])
     if from_death:
-        return "Success", 208
+        return {"message": "Success"}, 208
     # Tabela de respawns
     respawns_table = sql_con.TABLES["respawns"]
 
@@ -154,14 +130,14 @@ def leave():
             .values(data_logout=text("NOW()"))
         )
         sql_con.execute_query(update_logout)
-        return 'Success', 200
+        return {"message": "Success"}
     else:
-        return 'No matching record found', 404
+        raise HTTPException(status_code=404, detail="No matching record found")
 
 
-@app.route('/pot/killed', methods=['POST'])
-def killed():
-    data = request.get_json()
+@app.post('/pot/killed')
+async def killed(request: Request):
+    data = await request.json()
     victim = data['VictimCharacterName']
     alderon_id = data['VictimAlderonId']
 
@@ -183,12 +159,12 @@ def killed():
     )
     sql_con.execute_query(delete_respawn)
 
-    return 'Success', 200
+    return {"message": "Success"}
 
 
-@app.route('/pot/login', methods=['POST'])
-def login():
-    data = request.get_json()
+@app.post('/pot/login')
+async def login(request: Request):
+    data = await request.json()
 
     jogadores_table = sql_con.TABLES["jogadores"]
 
@@ -202,20 +178,20 @@ def login():
 
     sql_con.execute_query(insert_jogador)
 
-    return "Sucesso", 200
+    return {"message": "Sucesso"}
 
 
-@app.route('/pot/server_start', methods=['POST'])
-def server_start():
+@app.post('/pot/server_start')
+async def server_start():
     # Comando RCON para iniciar o modo de criador
     path_rcon_client.execute_rcommand("loadcreatormode 1")
 
-    return "Sucesso", 200
+    return {"message": "Sucesso"}
 
 
-@app.route('/pot/server_error', methods=['POST'])
-def server_error():
-    data = request.get_json()
+@app.post('/pot/server_error')
+async def server_error(request: Request):
+    data = await request.json()
 
     server_error_table = sql_con.TABLES["server_error"]
     # Inserir respawn
@@ -230,12 +206,12 @@ def server_error():
         error_message=data['ErrorMesssage']
     )
     sql_con.execute_query(insert_respawn)
-    return "Sucesso", 200
+    return {"message": "Sucesso"}
 
 
-@app.route('/pot/player_report', methods=['POST'])
-def player_report():
-    data = request.get_json()
+@app.post('/pot/player_report')
+async def player_report(request: Request):
+    data = await request.json()
 
     player_report_table = sql_con.TABLES['player_report']
     # Inserir respawn
@@ -257,12 +233,12 @@ def player_report():
         platform=data['Platform']
     )
     sql_con.execute_query(insert_report)
-    return "Sucesso", 200
+    return {"message": "Sucesso"}
 
 
-@app.route('/pot/bad_average_tick', methods=['POST'])
-def bad_average_tick():
-    data = request.get_json()
+@app.post('/pot/bad_average_tick')
+async def bad_average_tick(request: Request):
+    data = await request.json()
 
     bad_average_tick_table = sql_con.TABLES['player_report']
     # Inserir respawn
@@ -279,12 +255,12 @@ def bad_average_tick():
         player_count=data['PlayerCount']
     )
     sql_con.execute_query(insert_tick)
-    return "Sucesso", 200
+    return {"message": "Sucesso"}
 
 
-@app.route('/pot/admin_command', methods=['POST'])
-def admin_command():
-    data = request.get_json()
+@app.post('/pot/admin_command')
+async def admin_command(request: Request):
+    data = await request.json()
 
     admin_command_table = sql_con.TABLES['admin_commands']
     # Tratar campos opcionais
@@ -301,12 +277,12 @@ def admin_command():
         command=data['Command'],
     )
     sql_con.execute_query(insert_admin)
-    return "Sucesso", 200
+    return {"message": "Sucesso"}
 
 
-@app.route('/pot/spectate', methods=['POST'])
-def spectate():
-    data = request.get_json()
+@app.post('/pot/spectate')
+async def spectate(request: Request):
+    data = await request.json()
     alderon_id = data['AdminAlderonId']
     # Tabela de respawns
     respawns_table = sql_con.TABLES["respawns"]
@@ -328,10 +304,11 @@ def spectate():
             .values(data_logout=text("NOW()"))
         )
         sql_con.execute_query(update_logout)
-        return 'Success', 200
+        return {"message": "Success"}
     else:
-        return 'No matching record found', 404
+        raise HTTPException(status_code=404, detail="No matching record found")
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, port=7001)
+    import uvicorn
+    uvicorn.run(app, host='0.0.0.0', port=7001, debug=True)
