@@ -311,4 +311,4 @@ async def spectate(request: Request):
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host='0.0.0.0', port=7001, debug=True)
+    uvicorn.run(app, host='0.0.0.0', port=7001)
