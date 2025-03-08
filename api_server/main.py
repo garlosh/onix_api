@@ -284,7 +284,7 @@ async def admin_command(request: Request):
 async def spectate(request: Request):
     data = await request.json()
     alderon_id = data['AdminAlderonId']
-    # Tabela de respawns
+    # Tabela de respawn
     respawns_table = sql_con.TABLES["respawns"]
 
     # Subconsulta para obter o registro mais recente
