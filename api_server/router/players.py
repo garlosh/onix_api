@@ -121,11 +121,34 @@ async def leave(request: Request):
 @router.post('/killed')
 async def killed(request: Request):
     data = await request.json()
+    # Extract all required fields from the request
     victim = data['VictimCharacterName']
     alderon_id = data['VictimAlderonId']
+    victim_name = data['VictimPlayerName']
+    victim_dino = data['VictimDinoType']
+    killer_id = data['KillerAlderonId']
+    killer_name = data['KillerPlayerName']
+    killer_char_name = data['KillerCharacterName']
+    killer_dino = data['KillerDinoType']
+    damage_type = data['DamageType']
 
     ancioes_table = sql_con.TABLES["ancioes"]
     respawns_table = sql_con.TABLES["respawns"]
+    log_mortes_table = sql_con.TABLES["log_mortes"]
+
+    # Insert death log
+    insert_morte = log_mortes_table.insert().values(
+        victim_id=alderon_id,
+        victim_name=victim_name,
+        victim_char_name=victim,
+        victim_dino=victim_dino,
+        killer_id=killer_id,
+        killer_name=killer_name,
+        damage_type=damage_type,
+        killer_char_name=killer_char_name,
+        killer_dino=killer_dino
+    )
+    sql_con.execute_query(insert_morte)
 
     # Remover ancião normal
     delete_anciao = ancioes_table.delete().where(
