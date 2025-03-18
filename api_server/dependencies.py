@@ -1,6 +1,7 @@
 from common.sqlHandler import Client
 from common.pathcon import client
 import json
+
 # Configuração do SQLHandler e RCON
 sql_con = Client(
     'mysql', 'pymysql', 'adm', 'cabeca0213', '127.0.0.1', '3306', 'projeto_onix')
