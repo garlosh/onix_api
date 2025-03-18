@@ -7,7 +7,7 @@ BASE_DIR=$(pwd)
 VENV_DIR="$BASE_DIR/venv"
 
 # Caminho do script Python a ser executado
-PYTHON_SCRIPT="$BASE_DIR/api_server/main.py"
+PYTHON_SCRIPT="api_server.main"
 
 # Verifica se o ambiente virtual existe
 if [[ -d "$VENV_DIR" ]]; then
@@ -21,7 +21,7 @@ fi
 # Verifica se o script Python existe
 if [[ -f "$PYTHON_SCRIPT" ]]; then
     echo "Executando o script Python: $PYTHON_SCRIPT"
-    python "$PYTHON_SCRIPT"
+    python -m "$PYTHON_SCRIPT"
 else
     echo "Erro: Script Python não encontrado em $PYTHON_SCRIPT"
     deactivate  # Desativa o venv, caso tenha sido ativado
