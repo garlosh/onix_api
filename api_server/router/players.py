@@ -97,45 +97,69 @@ async def respawn(data: RespawnData):
 async def leave(data: LeaveData):
     """
     Registra quando um jogador sai do servidor.
-
-    Args:
-        ServerGuid: ID do servidor
-        PlayerName: Nome do jogador
-        PlayerAlderonId: ID Alderon do jogador
-        FromDeath: Se saiu por morte
-        SafeLog: Se foi um logout seguro
-        CharacterName: Nome do personagem
-        DinosaurType: Tipo do dinossauro
-        DinosaurGrowth: Crescimento do dinossauro
-        Location: Localização do logout
     """
     if data.FromDeath:
         return {"message": "Success"}
 
-    # Tabela de respawns
     respawns_table = sql_con.TABLES["respawns"]
 
-    # Subconsulta para obter o registro mais recente
-    subquery = select(respawns_table.c.id).where(
-        (respawns_table.c.id_alderon == data.PlayerAlderonId) &
-        (respawns_table.c.nome_dino == data.CharacterName)
-    ).order_by(respawns_table.c.data_login.desc()).limit(1)
+    try:
+        # First try to find any open session (without logout)
+        open_sessions_query = select(respawns_table.c.id).where(
+            (respawns_table.c.id_alderon == data.PlayerAlderonId) &
+            (respawns_table.c.nome_dino == data.CharacterName) &
+            (respawns_table.c.data_logout.is_(None))
+        ).order_by(respawns_table.c.data_login.desc())
 
-    # Executa a subconsulta usando sql_con
-    result = sql_con.execute_query(subquery)
-    id_to_update = result.scalar() if result else None
+        result = sql_con.execute_query(open_sessions_query)
+        open_sessions = result.fetchall()
 
-    if id_to_update:
-        # Atualizar logout do registro mais recente
-        update_logout = (
-            respawns_table.update()
-            .where(respawns_table.c.id == id_to_update)
-            .values(data_logout=text("NOW()"))
+        if not open_sessions:
+            # If no open session found, create one with retroactive login
+            insert_respawn = respawns_table.insert().values(
+                server_guid=data.ServerGuid,
+                id_alderon=data.PlayerAlderonId,
+                nome_player=data.PlayerName,
+                nome_dino=data.CharacterName,
+                data_login=text("DATE_SUB(NOW(), INTERVAL 1 MINUTE)"),
+                data_logout=text("NOW()")
+            )
+            sql_con.execute_query(insert_respawn)
+            return {"message": "Created and closed retroactive session"}
+
+        # Close all open sessions for this player/character
+        for session in open_sessions:
+            update_logout = (
+                respawns_table.update()
+                .where(respawns_table.c.id == session[0])
+                .values(data_logout=text("NOW()"))
+            )
+            sql_con.execute_query(update_logout)
+
+        return {"message": f"Closed {len(open_sessions)} open sessions"}
+
+    except Exception as e:
+
+        # Still try to force close any potential open sessions
+        try:
+            force_close = (
+                respawns_table.update()
+                .where(
+                    (respawns_table.c.id_alderon == data.PlayerAlderonId) &
+                    (respawns_table.c.nome_dino == data.CharacterName) &
+                    (respawns_table.c.data_logout.is_(None))
+                )
+                .values(data_logout=text("NOW()"))
+            )
+            sql_con.execute_query(force_close)
+            return {"message": "Forced session closure after error"}
+        except:
+            pass
+
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to process leave request"
         )
-        sql_con.execute_query(update_logout)
-        return {"message": "Success"}
-    else:
-        raise HTTPException(status_code=404, detail="No matching record found")
 
 
 @router.post('/killed', response_model=dict[str, str])
