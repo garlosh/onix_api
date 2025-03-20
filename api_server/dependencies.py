@@ -4,8 +4,8 @@ import json
 
 # Configuração do SQLHandler e RCON
 sql_con = Client(
-    'mysql', 'pymysql', 'adm', 'cabeca0213', '127.0.0.1', '3306', 'projeto_onix')
-path_rcon_client = client('127.0.0.1', 7779, 'Cucetinha')
+    'mysql', 'pymysql', 'adm', 'cabeca0213', '192.168.0.134', '3306', 'projeto_onix')
+path_rcon_client = client('192.168.0.134', 7779, 'Cucetinha')
 
 # Carregar configurações
 with open('config.json') as json_file:
@@ -13,6 +13,6 @@ with open('config.json') as json_file:
 
 # Inicializar tabelas
 tables = ["respawns", "ancioes", "server_error",
-          "jogadores", "player_report", "admin_commands"]
+          "jogadores", "player_report", "admin_commands", "log_mortes"]
 for table in tables:
     sql_con.get_table_metadata(table)

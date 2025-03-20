@@ -4,9 +4,60 @@ from api_server.dependencies import sql_con, path_rcon_client
 from api_server.utils.functions import calcular_tempo_total_jogador, log_regression, convert_to_geometry
 from random import choice
 from sqlalchemy.sql import text, select
+from pydantic import BaseModel
 import json
 
 router = APIRouter(prefix="/pot")
+
+
+class KilledData(BaseModel):
+    ServerGuid: str
+    TimeOfDay: int
+    DamageType: str
+    VictimPOI: str
+    VictimName: str
+    VictimAlderonId: str
+    VictimCharacterName: str
+    VictimDinosaurType: str
+    VictimRole: str
+    VictimIsAdmin: bool
+    VictimGrowth: float
+    VictimLocation: str
+    KillerName: str
+    KillerAlderonId: str
+    KillerCharacterName: str
+    KillerDinosaurType: str
+    KillerRole: str
+    KillerIsAdmin: bool
+    KillerGrowth: float
+    KillerLocation: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "ServerGuid": "63a86971-0cb9-4569-a43a-4b05317f2d73",
+                "TimeOfDay": 1300,
+                "DamageType": "DT_ATTACK",
+                "VictimPOI": "Talons Point",
+                "VictimName": "Test1",
+                "VictimAlderonId": "048-236-424",
+                "VictimCharacterName": "DiloIsCool",
+                "VictimDinosaurType": "Dilophosaurus",
+                "VictimRole": "CoolRole",
+                "VictimIsAdmin": False,
+                "VictimGrowth": 0.5,
+                "VictimLocation": "(X=328866.125,Y=-130023.359375,Z=853.25)",
+                "KillerName": "Test2",
+                "KillerAlderonId": "123-430-121",
+                "KillerCharacterName": "DiloIsCooler",
+                "KillerDinosaurType": "Dilophosaurus",
+                "KillerRole": "NotAsCoolRole",
+                "KillerIsAdmin": False,
+                "KillerGrowth": 0.5,
+                "KillerLocation": "(X=328866.125,Y=-130023.359375,Z=853.25)"
+            }
+        }
+
 
 # Carregar configurações
 with open('config.json') as json_file:
@@ -84,7 +135,7 @@ async def respawn(request: Request):
     return {"message": "Success"}
 
 
-@router.post('/pot/leave')
+@router.post('/leave')
 async def leave(request: Request):
     data = await request.json()
     alderon_id = data['PlayerAlderonId']
@@ -118,50 +169,52 @@ async def leave(request: Request):
         raise HTTPException(status_code=404, detail="No matching record found")
 
 
-@router.post('/killed')
-async def killed(request: Request):
-    data = await request.json()
-    # Extract all required fields from the request
-    victim = data['VictimCharacterName']
-    alderon_id = data['VictimAlderonId']
-    victim_name = data['VictimPlayerName']
-    victim_dino = data['VictimDinoType']
-    killer_id = data['KillerAlderonId']
-    killer_name = data['KillerPlayerName']
-    killer_char_name = data['KillerCharacterName']
-    killer_dino = data['KillerDinoType']
-    damage_type = data['DamageType']
+@router.post('/killed', response_model=dict[str, str])
+async def killed(data: KilledData):
+    """
+    Registra a morte de um jogador no servidor.
 
+    Args:
+        VictimCharacterName: Nome do personagem da vítima
+        VictimAlderonId: ID Alderon da vítima
+        VictimName: Nome do jogador vítima
+        VictimDinosaurType: Tipo do dinossauro da vítima
+        KillerAlderonId: ID Alderon do assassino
+        KillerName: Nome do jogador assassino
+        KillerCharacterName: Nome do personagem do assassino
+        KillerDinosaurType: Tipo do dinossauro do assassino
+        DamageType: Tipo de dano que causou a morte
+    """
     ancioes_table = sql_con.TABLES["ancioes"]
     respawns_table = sql_con.TABLES["respawns"]
     log_mortes_table = sql_con.TABLES["log_mortes"]
 
     # Insert death log
     insert_morte = log_mortes_table.insert().values(
-        victim_id=alderon_id,
-        victim_name=victim_name,
-        victim_char_name=victim,
-        victim_dino=victim_dino,
-        killer_id=killer_id,
-        killer_name=killer_name,
-        damage_type=damage_type,
-        killer_char_name=killer_char_name,
-        killer_dino=killer_dino
+        victim_id=data.VictimAlderonId,
+        victim_name=data.VictimName,
+        victim_char_name=data.VictimCharacterName,
+        victim_dino=data.VictimDinosaurType,
+        killer_id=data.KillerAlderonId,
+        killer_name=data.KillerName,
+        damage_type=data.DamageType,
+        killer_char_name=data.KillerCharacterName,
+        killer_dino=data.KillerDinosaurType
     )
     sql_con.execute_query(insert_morte)
 
     # Remover ancião normal
     delete_anciao = ancioes_table.delete().where(
-        (ancioes_table.c.id_alderon == alderon_id) &
-        (ancioes_table.c.nome_dino == victim) &
+        (ancioes_table.c.id_alderon == data.VictimAlderonId) &
+        (ancioes_table.c.nome_dino == data.VictimCharacterName) &
         (ancioes_table.c.tipo_anciao == 'normal')
     )
     sql_con.execute_query(delete_anciao)
 
     # Remover respawn correspondente
     delete_respawn = respawns_table.delete().where(
-        (respawns_table.c.id_alderon == alderon_id) &
-        (respawns_table.c.nome_dino == victim)
+        (respawns_table.c.id_alderon == data.VictimAlderonId) &
+        (respawns_table.c.nome_dino == data.VictimCharacterName)
     )
     sql_con.execute_query(delete_respawn)
 
@@ -286,7 +339,7 @@ async def admin_command(request: Request):
     return {"message": "Sucesso"}
 
 
-@router.post('/pot/spectate')
+@router.post('/spectate')
 async def spectate(request: Request):
     data = await request.json()
     alderon_id = data['AdminAlderonId']
