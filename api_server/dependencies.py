@@ -13,6 +13,6 @@ with open('config.json') as json_file:
 
 # Inicializar tabelas
 tables = ["respawns", "ancioes", "server_error",
-          "jogadores", "player_report", "admin_commands", "log_mortes"]
+          "jogadores", "player_report", "admin_commands", "log_mortes", "grupos"]
 for table in tables:
     sql_con.get_table_metadata(table)

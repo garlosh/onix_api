@@ -256,3 +256,24 @@ class RespawnData(BaseModel):
                 "Location": "(X=328866.125,Y=-130023.359375,Z=853.25)"
             }
         }
+
+
+class GroupData(BaseModel):
+    ServerGuid: str
+    Player: str
+    PlayerAlderonId: str
+    Leader: str
+    LeaderAlderonId: str
+    GroupID: int
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "ServerGuid": "63a86971-0cb9-4569-a43a-4b05317f2d73",
+                "Player": "Test1",
+                "PlayerAlderonId": "048-236-424",
+                "Leader": "Test2",
+                "LeaderAlderonId": "123-430-121",
+                "GroupID": "3431"
+            }
+        }

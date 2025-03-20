@@ -399,3 +399,70 @@ async def spectate(data: SpectateData):
         return {"message": "Success"}
     else:
         raise HTTPException(status_code=404, detail="No matching record found")
+
+
+@router.post('/group_join', response_model=dict[str, str])
+async def group_join(data: GroupData):
+    """
+    Registra quando um jogador entra em um grupo.
+
+    Args:
+        ServerGuid: ID do servidor
+        Player: Nome do jogador 
+        PlayerAlderonId: ID Alderon do jogador
+        Leader: Nome do líder
+        LeaderAlderonId: ID Alderon do líder
+        GroupID: ID do grupo
+    """
+    grupos_table = sql_con.TABLES['grupos']
+
+    # Insere nova entrada no grupo
+    insert_grupo = grupos_table.insert().values(
+        group_id=data.GroupID,
+        player_name=data.Player,
+        player_id=data.PlayerAlderonId,
+        leader_name=data.Leader,
+        leader_id=data.LeaderAlderonId
+    )
+
+    try:
+        sql_con.execute_query(insert_grupo)
+        return {"message": "Success"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post('/group_leave', response_model=dict[str, str])
+async def group_leave(data: GroupData):
+    """
+    Registra quando um jogador sai de um grupo.
+
+    Args:
+        ServerGuid: ID do servidor
+        Player: Nome do jogador
+        PlayerAlderonId: ID Alderon do jogador
+        GroupID: ID do grupo
+    """
+    grupos_table = sql_con.TABLES['grupos']
+
+    # Atualiza a data de saída do jogador no grupo
+    update_grupo = (
+        grupos_table.update()
+        .where(
+            (grupos_table.c.player_id == data.PlayerAlderonId) &
+            (grupos_table.c.group_id == data.GroupID) &
+            (grupos_table.c.data_saida.is_(None))
+        )
+        .values(data_saida=text("NOW()"))
+    )
+
+    try:
+        result = sql_con.execute_query(update_grupo)
+        if result.rowcount == 0:
+            raise HTTPException(
+                status_code=404, detail="No active group membership found")
+        return {"message": "Success"}
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=400, detail=str(e))
