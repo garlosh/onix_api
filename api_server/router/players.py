@@ -4,7 +4,7 @@ from api_server.dependencies import sql_con, path_rcon_client
 from api_server.utils.functions import calcular_tempo_total_jogador, log_regression, convert_to_geometry
 from random import choice
 from sqlalchemy.sql import text, select
-from data_models.playerModels import *
+from api_server.router.data_models.playerModels import *
 import json
 
 router = APIRouter(prefix="/pot")

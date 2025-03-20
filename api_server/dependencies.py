@@ -4,8 +4,8 @@ import json
 
 # Configuração do SQLHandler e RCON
 sql_con = Client(
-    'mysql', 'pymysql', 'adm', 'cabeca0213', '192.168.0.134', '3306', 'projeto_onix')
-path_rcon_client = client('192.168.0.134', 7779, 'Cucetinha')
+    'mysql', 'pymysql', 'adm', 'cabeca0213', '127.0.0.1', '3306', 'projeto_onix')
+path_rcon_client = client('127.0.0.1', 7779, 'Cucetinha')
 
 # Carregar configurações
 with open('config.json') as json_file:
