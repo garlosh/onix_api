@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from sqlalchemy import create_engine, text, Table, MetaData, insert
 from sqlalchemy.sql import Insert, Update, Delete, Select
 from sqlalchemy.sql.expression import TextClause
-import asyncio
 import pandas as pd
 from typing import Dict
 
@@ -29,21 +28,22 @@ class Client:
         self.TABLES[table_name] = Table(
             table_name, self.METADATA[table_name], autoload_with=self.ENGINE)
 
-    async def execute_query(self, query):
+    def execute_query(self, query):
         """
-        Executa uma consulta SQLAlchemy ou uma string de consulta SQL de forma assíncrona.
+        Executa uma consulta SQLAlchemy ou uma string de consulta SQL.
         """
-        async with self.ENGINE.connect() as connection:
+        with self.ENGINE.connect() as connection:
             # Verifica se é uma string ou cláusula textual
             if isinstance(query, (str, TextClause)):
-                result = await connection.execute(text(query))
+                result = connection.execute(text(query))
             # Verifica se é uma operação de escrita (Insert, Update, Delete)
             elif isinstance(query, (Insert, Update, Delete)):
-                result = await connection.execute(query)
-                await connection.commit()  # Confirma operações de escrita
+                result = connection.execute(query)
+                connection.commit()  # Confirma operações de escrita
             # Verifica se é uma consulta Select
             elif isinstance(query, Select):
-                result = await connection.execute(query)
+                # Retorna resultados diretamente
+                result = connection.execute(query)
             else:
                 raise ValueError(
                     f"Tipo de consulta não suportado: {type(query)}")

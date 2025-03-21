@@ -44,7 +44,7 @@ async def respawn(data: RespawnData):
         id_dino=data.CharacterID,
         nome_dino=data.CharacterName
     )
-    await sql_con.execute_query(insert_respawn)
+    sql_con.execute_query(insert_respawn)
 
     # Calcular tempo total jogado
     time_played = calcular_tempo_total_jogador(
@@ -111,7 +111,7 @@ async def leave(data: LeaveData):
             (respawns_table.c.data_logout.is_(None))
         ).order_by(respawns_table.c.data_login.desc())
 
-        result = await sql_con.execute_query(open_sessions_query)
+        result = sql_con.execute_query(open_sessions_query)
         open_sessions = result.fetchall()
 
         if not open_sessions:
@@ -124,7 +124,7 @@ async def leave(data: LeaveData):
                 data_login=text("DATE_SUB(NOW(), INTERVAL 1 MINUTE)"),
                 data_logout=text("NOW()")
             )
-            await sql_con.execute_query(insert_respawn)
+            sql_con.execute_query(insert_respawn)
             return {"message": "Created and closed retroactive session"}
 
         # Close all open sessions for this player/character
@@ -134,7 +134,7 @@ async def leave(data: LeaveData):
                 .where(respawns_table.c.id == session[0])
                 .values(data_logout=text("NOW()"))
             )
-            await sql_con.execute_query(update_logout)
+            sql_con.execute_query(update_logout)
 
         return {"message": f"Closed {len(open_sessions)} open sessions"}
 
@@ -151,7 +151,7 @@ async def leave(data: LeaveData):
                 )
                 .values(data_logout=text("NOW()"))
             )
-            await sql_con.execute_query(force_close)
+            sql_con.execute_query(force_close)
             return {"message": "Forced session closure after error"}
         except:
             pass
@@ -194,7 +194,7 @@ async def killed(data: KilledData):
         killer_char_name=data.KillerCharacterName,
         killer_dino=data.KillerDinosaurType
     )
-    await sql_con.execute_query(insert_morte)
+    sql_con.execute_query(insert_morte)
 
     # Remover ancião normal
     delete_anciao = ancioes_table.delete().where(
@@ -202,14 +202,14 @@ async def killed(data: KilledData):
         (ancioes_table.c.nome_dino == data.VictimCharacterName) &
         (ancioes_table.c.tipo_anciao == 'normal')
     )
-    await sql_con.execute_query(delete_anciao)
+    sql_con.execute_query(delete_anciao)
 
     # Remover respawn correspondente
     delete_respawn = respawns_table.delete().where(
         (respawns_table.c.id_alderon == data.VictimAlderonId) &
         (respawns_table.c.nome_dino == data.VictimCharacterName)
     )
-    await sql_con.execute_query(delete_respawn)
+    sql_con.execute_query(delete_respawn)
 
     return {"message": "Success"}
 
@@ -237,7 +237,7 @@ async def login(data: LoginData):
         player_name=data.PlayerName
     )
 
-    await sql_con.execute_query(insert_jogador)
+    sql_con.execute_query(insert_jogador)
 
     return {"message": "Success"}
 
@@ -277,7 +277,7 @@ async def server_error(data: ServerErrorData):
         session=data.Session,
         error_message=data.ErrorMesssage
     )
-    await sql_con.execute_query(insert_error)
+    sql_con.execute_query(insert_error)
     return {"message": "Success"}
 
 
@@ -324,7 +324,7 @@ async def player_report(data: PlayerReportData):
         location=convert_to_geometry(data.Location),
         platform=data.Platform
     )
-    await sql_con.execute_query(insert_report)
+    sql_con.execute_query(insert_report)
 
     return {"message": "Success"}
 
@@ -360,7 +360,7 @@ async def bad_average_tick(data: BadAverageTickData):
         current_tick_rate=data.CurrentTickRate,
         player_count=data.PlayerCount
     )
-    await sql_con.execute_query(insert_tick)
+    sql_con.execute_query(insert_tick)
     return {"message": "Success"}
 
 
@@ -385,7 +385,7 @@ async def admin_command(data: AdminCommandData):
         role=data.Role,
         command=data.Command
     )
-    await sql_con.execute_query(insert_admin)
+    sql_con.execute_query(insert_admin)
     return {"message": "Success"}
 
 
@@ -409,7 +409,7 @@ async def spectate(data: SpectateData):
     ).order_by(respawns_table.c.data_login.desc()).limit(1)
 
     # Executa a subconsulta usando sql_con
-    result = await sql_con.execute_query(subquery)
+    result = sql_con.execute_query(subquery)
     id_to_update = result.scalar() if result else None
 
     if id_to_update:
@@ -419,7 +419,7 @@ async def spectate(data: SpectateData):
             .where(respawns_table.c.id == id_to_update)
             .values(data_logout=text("NOW()"))
         )
-        await sql_con.execute_query(update_logout)
+        sql_con.execute_query(update_logout)
         return {"message": "Success"}
     else:
         raise HTTPException(status_code=404, detail="No matching record found")
@@ -450,7 +450,7 @@ async def group_join(data: GroupData):
     )
 
     try:
-        await sql_con.execute_query(insert_grupo)
+        sql_con.execute_query(insert_grupo)
         return {"message": "Success"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -481,7 +481,7 @@ async def group_leave(data: GroupData):
     )
 
     try:
-        result = await sql_con.execute_query(update_grupo)
+        result = sql_con.execute_query(update_grupo)
         if result.rowcount == 0:
             raise HTTPException(
                 status_code=404, detail="No active group membership found")
