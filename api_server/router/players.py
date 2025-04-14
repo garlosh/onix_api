@@ -22,7 +22,7 @@ async def respawn(data: RespawnData):
     dinos = sql_con.TABLES["dinos"]
 
     # Constantes
-    min_time, max_time = 6.0, 45.0
+    min_time, max_time = 6.0, 60.0
     # Fecha todas as sessões abertas do jogador
     close_open_sessions = (
         respawns_table.update()

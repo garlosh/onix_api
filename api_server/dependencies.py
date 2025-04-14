@@ -17,19 +17,19 @@ tables = ["respawns", "ancioes", "server_error",
           "grupos", "stats_tiers_dinos", "dinos"]
 
 # Stats de dino
-ancient_stats: set = set(["CombatWeight",
-                         "CombatWeight",
-                          "DamageMultiplier",
-                          "DamageMultiplier",
-                          "Armor",
-                          "MaxStamina",
-                          "MaxHealth",
-                          "BleedingHealRate",
-                          "HealthRecoveryRate"
-                          "TurnRadiusMultiplier",
-                          "TurnInplaceRadiusMultiplier",
-                          "TrottingSpeedMultiplier",
-                          "SprintingSpeedMultiplier"])
+ancient_stats: list = ["CombatWeight",
+                       "CombatWeight",
+                       "DamageMultiplier",
+                       "DamageMultiplier",
+                       "Armor",
+                       "MaxStamina",
+                       "MaxHealth",
+                       "BleedingHealRate",
+                       "HealthRecoveryRate"
+                       "TurnRadiusMultiplier",
+                       "TurnInplaceRadiusMultiplier",
+                       "TrottingSpeedMultiplier",
+                       "SprintingSpeedMultiplier"]
 
 
 for table in tables:
