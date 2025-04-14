@@ -14,7 +14,7 @@ path_rcon_client = client('127.0.0.1', 7779, 'Cucetinha')
 # Inicializar tabelas
 tables = ["respawns", "ancioes", "server_error",
           "jogadores", "player_report", "admin_commands", "log_mortes",
-          "grupos", "stats_tiers_dinos"]
+          "grupos", "stats_tiers_dinos", "dinos"]
 
 # Stats de dino
 ancient_stats: set = set(["CombatWeight",
