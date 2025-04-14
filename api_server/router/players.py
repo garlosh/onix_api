@@ -133,7 +133,8 @@ async def respawn(data: RespawnData):
                 )
             )
             connection.commit()
-
+    else:
+        return {"message": "Success"}
     # Apply stat increases for each stat
     for stat, increase in stat_increases.items():
         path_rcon_client.execute_rcommand(
