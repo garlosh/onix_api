@@ -166,7 +166,7 @@ async def leave(data: LeaveData):
             .values(data_logout=text("NOW()"))
         )
 
-        result = await sql_con.execute_query(close_sessions)
+        result = sql_con.execute_query(close_sessions)
 
         if result.rowcount == 0:
             # Se nenhuma sessão aberta foi encontrada, cria uma retroativa
@@ -178,7 +178,7 @@ async def leave(data: LeaveData):
                 data_login=text("DATE_SUB(NOW(), INTERVAL 1 MINUTE)"),
                 data_logout=text("NOW()")
             )
-            await sql_con.execute_query(insert_respawn)
+            sql_con.execute_query(insert_respawn)
             return {"message": "Created and closed retroactive session"}
 
         return {"message": f"Closed {result.rowcount} open sessions"}
