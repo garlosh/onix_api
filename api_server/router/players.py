@@ -79,7 +79,9 @@ async def respawn(data: RespawnData):
                     ancioes_table.update()
                     .where(
                         (ancioes_table.c.id_alderon == data.PlayerAlderonId) &
-                        (ancioes_table.c.nome_player == data.PlayerName)
+                        (ancioes_table.c.nome_player == data.PlayerName) &
+                        (ancioes_table.c.id_dino == data.CharacterID) &
+                        (ancioes_table.c.nome_dino == data.CharacterName)
                     )
                     .values(stat2=stat2)
                 )
