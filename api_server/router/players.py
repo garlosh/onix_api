@@ -91,9 +91,9 @@ async def respawn(data: RespawnData):
         stat_increases = {
             stat: regression(
                 min_time,
-                dino_stats[f'{stat}_min'],
+                float(dino_stats[f'{stat}_min'].iloc[0]),  # Convert to float
                 max_time,
-                dino_stats[f'{stat}_max'],
+                float(dino_stats[f'{stat}_max'].iloc[0]),  # Convert to float
                 time_played
             ) for stat in stats
         }
@@ -107,9 +107,9 @@ async def respawn(data: RespawnData):
         stat_increases = {
             stat: regression(
                 min_time,
-                dino_stats[f'{stat}_min'],
+                float(dino_stats[f'{stat}_min'].iloc[0]),  # Convert to float
                 max_time,
-                dino_stats[f'{stat}_max'],
+                float(dino_stats[f'{stat}_max'].iloc[0]),  # Convert to float
                 time_played
             ) for stat in stats
         }
