@@ -9,27 +9,6 @@ from pandas import read_sql
 router = APIRouter(prefix="/pot")
 
 
-body_parts: list = ["HeadLeft",
-                    "HeadRight",
-                    "NeckLeft",
-                    "NeckRight",
-                    "ShoulderLeft",
-                    "ShoulderRight",
-                    "BodyLeft",
-                    "BodyRigh",
-                    "TailBaseLef",
-                    "TailBaseRight",
-                    "TailTip",
-                    "LeftArm",
-                    "RightArm",
-                    "LeftHand",
-                    "RightHand",
-                    "LeftLeg",
-                    "RightLeg",
-                    "LeftFoot",
-                    "RightFoot"]
-
-
 @router.post('/respawn', response_model=dict[str, str])
 async def respawn(data: RespawnData):
     """
@@ -153,14 +132,10 @@ async def respawn(data: RespawnData):
     # Apply stat increases for each stat
     for stat, increase in stat_increases.items():
         path_rcon_client.execute_rcommand(
-            f"modattr {data.PlayerAlderonId} {stat} {round(increase, 2)}"
+            f"modattr {data.PlayerAlderonId} {stat} {round(increase, 4)}"
         )
         path_rcon_client.execute_rcommand(
             f"whisper {data.PlayerAlderonId} você recebeu o stat {stat} em decorrência do seu Ancião!"
-        )
-    for body_part in body_parts:
-        path_rcon_client.execute_rcommand(
-            f"setpermawound {data.PlayerAlderonId} {body_part} 1000"
         )
     path_rcon_client.execute_rcommand(
         "systemmessageall Um dinosauro ancião conectou no servidor!"
