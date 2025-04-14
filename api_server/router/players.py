@@ -5,9 +5,29 @@ from api_server.utils.functions import calcular_tempo_total_jogador, regression,
 from random import choice
 from sqlalchemy.sql import text, select
 from api_server.router.data_models.playerModels import *
-import json
 from pandas import read_sql
 router = APIRouter(prefix="/pot")
+
+
+body_parts: list = ["HeadLeft",
+                    "HeadRight",
+                    "NeckLeft",
+                    "NeckRight",
+                    "ShoulderLeft",
+                    "ShoulderRight",
+                    "BodyLeft",
+                    "BodyRigh",
+                    "TailBaseLef",
+                    "TailBaseRight",
+                    "TailTip",
+                    "LeftArm",
+                    "RightArm",
+                    "LeftHand",
+                    "RightHand",
+                    "LeftLeg",
+                    "RightLeg",
+                    "LeftFoot",
+                    "RightFoot"]
 
 
 @router.post('/respawn', response_model=dict[str, str])
@@ -138,7 +158,10 @@ async def respawn(data: RespawnData):
         path_rcon_client.execute_rcommand(
             f"whisper {data.PlayerAlderonId} você recebeu o stat {stat} em decorrência do seu Ancião!"
         )
-
+    for body_part in body_parts:
+        path_rcon_client.execute_rcommand(
+            f"setpermawound {data.PlayerAlderonId} {body_part} 1000"
+        )
     path_rcon_client.execute_rcommand(
         "systemmessageall Um dinosauro ancião conectou no servidor!"
     )
