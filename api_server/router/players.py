@@ -1,6 +1,6 @@
 # api/router/players.py
 from fastapi import APIRouter, HTTPException
-from api_server.dependencies import sql_con, path_rcon_client
+from api_server.dependencies import sql_con, path_rcon_client, ancient_stats
 from api_server.utils.functions import calcular_tempo_total_jogador, regression, convert_to_geometry
 from random import choice
 from sqlalchemy.sql import text, select
@@ -8,11 +8,6 @@ from api_server.router.data_models.playerModels import *
 import json
 from pandas import read_sql
 router = APIRouter(prefix="/pot")
-
-
-# Carregar configurações
-with open('config.json') as json_file:
-    ancient_stats = json.load(json_file)
 
 
 @router.post('/respawn', response_model=dict[str, str])
@@ -76,7 +71,7 @@ async def respawn(data: RespawnData):
         )
 
     if normal_ancient:
-        stat1, stat2 = normal_ancient['stat1'], normal_ancient['stat2']
+        stat1, stat2 = normal_ancient.stat1, normal_ancient.stat2
         if stat2 is None:
             stat2 = choice(ancient_stats)
             # Insert new ancient record
