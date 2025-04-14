@@ -8,11 +8,29 @@ sql_con = Client(
 path_rcon_client = client('127.0.0.1', 7779, 'Cucetinha')
 
 # Carregar configurações
-with open('config.json') as json_file:
-    ancient_stats = json.load(json_file)
+# with open('config.json') as json_file:
+#    ancient_stats = json.load(json_file)
 
 # Inicializar tabelas
 tables = ["respawns", "ancioes", "server_error",
-          "jogadores", "player_report", "admin_commands", "log_mortes", "grupos"]
+          "jogadores", "player_report", "admin_commands", "log_mortes",
+          "grupos", "stats_tiers_dinos"]
+
+# Stats de dino
+ancient_stats: set = set(["CombatWeight",
+                         "CombatWeight",
+                          "DamageMultiplier",
+                          "DamageMultiplier",
+                          "Armor",
+                          "MaxStamina",
+                          "MaxHealth",
+                          "BleedingHealRate",
+                          "HealthRecoveryRate"
+                          "TurnRadiusMultiplier",
+                          "TurnInplaceRadiusMultiplier",
+                          "TrottingSpeedMultiplier",
+                          "SprintingSpeedMultiplier"])
+
+
 for table in tables:
     sql_con.get_table_metadata(table)

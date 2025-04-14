@@ -1,9 +1,9 @@
 from common import sqlHandler
-import numpy as np
+# import numpy as np
 import re
 
 
-def log_regression(x1, y_min, x2, y_max, val):
+def regression(x1, y_min, x2, y_max, val):
     """
     Retorna uma função logarítmica que passa pelos pontos (x1, y_min) e (x2, y_max).
 
@@ -17,12 +17,12 @@ def log_regression(x1, y_min, x2, y_max, val):
         function: Uma função logarítmica configurada.
     """
     # Calcular os parâmetros a e b
-    a = (y_max - y_min) / (np.log(x2) - np.log(x1))
-    b = y_min - a * np.log(x1)
+    a = (y_max - y_min) / ((x2) - (x1))
+    b = y_min - a * x1
 
     # Retornar a função logarítmica
 
-    return max(min(a * np.log(val) + b, y_max), y_min)
+    return max(min(a * val + b, y_max), y_min)
 
 
 def calcular_tempo_total_jogador(client: sqlHandler.Client, player_id: str, dino: str) -> float:

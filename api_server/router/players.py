@@ -1,12 +1,12 @@
 # api/router/players.py
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, HTTPException
 from api_server.dependencies import sql_con, path_rcon_client
-from api_server.utils.functions import calcular_tempo_total_jogador, log_regression, convert_to_geometry
+from api_server.utils.functions import calcular_tempo_total_jogador, regression, convert_to_geometry
 from random import choice
 from sqlalchemy.sql import text, select
 from api_server.router.data_models.playerModels import *
 import json
-
+from pandas import read_sql
 router = APIRouter(prefix="/pot")
 
 
@@ -18,25 +18,28 @@ with open('config.json') as json_file:
 @router.post('/respawn', response_model=dict[str, str])
 async def respawn(data: RespawnData):
     """
-    Registra o respawn de um jogador no servidor.
-
-    Args:
-        ServerGuid: ID do servidor
-        PlayerName: Nome do jogador
-        PlayerAlderonId: ID Alderon do jogador
-        Role: Cargo do jogador
-        CharacterID: ID do personagem
-        CharacterName: Nome do personagem
-        DinosaurType: Tipo do dinossauro
-        DinosaurGrowth: Crescimento do dinossauro
-        Location: Localização do respawn
+    Registra o respawn de um jogador no servidor e fecha sessões abertas.
     """
-    min_time, max_time = 6.0, 45.0
-
-    # Obter metadados da tabela respawns
+    # Instancia tabelas
     respawns_table = sql_con.TABLES["respawns"]
+    ancioes_table = sql_con.TABLES["ancioes"]
+    stats_tiers_dinos = sql_con.TABLES["stats_tiers_dinos"]
+    dinos = sql_con.TABLES["dinos"]
 
-    # Inserir respawn
+    # Constantes
+    min_time, max_time = 6.0, 45.0
+    # Fecha todas as sessões abertas do jogador
+    close_open_sessions = (
+        respawns_table.update()
+        .where(
+            (respawns_table.c.id_alderon == data.PlayerAlderonId) &
+            (respawns_table.c.data_logout.is_(None))
+        )
+        .values(data_logout=text("NOW()"))
+    )
+    sql_con.execute_query(close_open_sessions)
+
+    # Inserir novo respawn
     insert_respawn = respawns_table.insert().values(
         server_guid=data.ServerGuid,
         id_alderon=data.PlayerAlderonId,
@@ -51,8 +54,6 @@ async def respawn(data: RespawnData):
         sql_con, data.PlayerAlderonId, data.CharacterID) / 3600
 
     # Consultar ancião normal
-    ancioes_table = sql_con.TABLES["ancioes"]
-
     normal_ancient_query = ancioes_table.select().where(
         (ancioes_table.c.id_alderon == data.PlayerAlderonId) &
         (ancioes_table.c.id_dino == data.CharacterID) &
@@ -61,34 +62,90 @@ async def respawn(data: RespawnData):
     with sql_con.ENGINE.connect() as connection:
         normal_ancient = connection.execute(normal_ancient_query).fetchone()
 
-    if normal_ancient:
-        stat = normal_ancient.stat1
-        min_attr, max_attr = ancient_stats[stat]['min'], ancient_stats[stat]['max']
-        stat_increase = log_regression(
-            min_time, min_attr, max_time, max_attr, time_played)
-        path_rcon_client.execute_rcommand(
-            f"modattr {data.PlayerAlderonId} {stat} {round(stat_increase, 2)}")
-        path_rcon_client.execute_rcommand(
-            "systemmessageall Um dinosauro ancião conectou no servidor!")
-    elif data.DinosaurGrowth == 1.0 and time_played > min_time:
-        stat = choice(list(ancient_stats.keys()))
-        min_attr = ancient_stats[stat]['min']
-
-        insert_anciao = ancioes_table.insert().values(
-            id_alderon=data.PlayerAlderonId,
-            nome_player=data.PlayerName,
-            id_dino=data.CharacterID,
-            nome_dino=data.CharacterName,
-            stat1=stat,
-            tipo_anciao='normal'
+    # Verifica o tier e stats do dinossauro
+    verifica_stats = select(dinos, stats_tiers_dinos).select_from(
+        dinos.outerjoin(stats_tiers_dinos,
+                        dinos.c.tier == stats_tiers_dinos.c.tier)
+    )
+    result = read_sql(verifica_stats, sql_con.ENGINE)
+    dino_stats = result[result['nome_over'] == data.DinosaurType]
+    if dino_stats.empty:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to find dinosaur in database"
         )
+
+    if normal_ancient:
+        stat1, stat2 = normal_ancient['stat1'], normal_ancient['stat2']
+        if stat2 is None:
+            stat2 = choice(ancient_stats)
+            # Insert new ancient record
+            with sql_con.ENGINE.connect() as connection:
+                connection.execute(
+                    ancioes_table.update().values(
+                        stat2=stat2,
+                    ).where(
+                        id_alderon=data.PlayerAlderonId,
+                        nome_player=data.PlayerName
+                    )
+                )
+                connection.commit()
+        stats = [stat1, stat2]
+
+        # Calculate stats ranges and increases in one go
+        stat_increases = {
+            stat: regression(
+                min_time,
+                dino_stats[f'{stat}_min'],
+                max_time,
+                dino_stats[f'{stat}_max'],
+                time_played
+            ) for stat in stats
+        }
+
+    # Process new ancient dinosaur
+    elif data.DinosaurGrowth == 1.0 and time_played > min_time:
+        stat1, stat2 = choice(ancient_stats), choice(ancient_stats)
+        stats = [stat1, stat2]
+
+        # Calculate stats for new ancient
+        stat_increases = {
+            stat: regression(
+                min_time,
+                dino_stats[f'{stat}_min'],
+                max_time,
+                dino_stats[f'{stat}_max'],
+                time_played
+            ) for stat in stats
+        }
+
+        # Insert new ancient record
         with sql_con.ENGINE.connect() as connection:
-            normal_ancient = connection.execute(insert_anciao)
+            connection.execute(
+                ancioes_table.insert().values(
+                    id_alderon=data.PlayerAlderonId,
+                    nome_player=data.PlayerName,
+                    id_dino=data.CharacterID,
+                    nome_dino=data.CharacterName,
+                    stat1=stat1,
+                    stat2=stat2,
+                    tipo_anciao='normal'
+                )
+            )
             connection.commit()
+
+    # Apply stat increases for each stat
+    for stat, increase in stat_increases.items():
         path_rcon_client.execute_rcommand(
-            f"modattr {data.PlayerAlderonId} {stat} {round(min_attr, 2)}")
+            f"modattr {data.PlayerAlderonId} {stat} {round(increase, 2)}"
+        )
         path_rcon_client.execute_rcommand(
-            "systemmessageall Um dinosauro ancião conectou no servidor!")
+            f"whisper {data.PlayerAlderonId} você recebeu o stat {stat} em decorrência do seu Ancião!"
+        )
+
+    path_rcon_client.execute_rcommand(
+        "systemmessageall Um dinosauro ancião conectou no servidor!"
+    )
 
     return {"message": "Success"}
 
@@ -104,18 +161,21 @@ async def leave(data: LeaveData):
     respawns_table = sql_con.TABLES["respawns"]
 
     try:
-        # First try to find any open session (without logout)
-        open_sessions_query = select(respawns_table.c.id).where(
-            (respawns_table.c.id_alderon == data.PlayerAlderonId) &
-            (respawns_table.c.nome_dino == data.CharacterName) &
-            (respawns_table.c.data_logout.is_(None))
-        ).order_by(respawns_table.c.data_login.desc())
+        # Fecha todas as sessões abertas para este jogador/personagem
+        close_sessions = (
+            respawns_table.update()
+            .where(
+                (respawns_table.c.id_alderon == data.PlayerAlderonId) &
+                (respawns_table.c.nome_dino == data.CharacterName) &
+                (respawns_table.c.data_logout.is_(None))
+            )
+            .values(data_logout=text("NOW()"))
+        )
 
-        result = sql_con.execute_query(open_sessions_query)
-        open_sessions = result.fetchall()
+        result = await sql_con.execute_query(close_sessions)
 
-        if not open_sessions:
-            # If no open session found, create one with retroactive login
+        if result.rowcount == 0:
+            # Se nenhuma sessão aberta foi encontrada, cria uma retroativa
             insert_respawn = respawns_table.insert().values(
                 server_guid=data.ServerGuid,
                 id_alderon=data.PlayerAlderonId,
@@ -124,41 +184,15 @@ async def leave(data: LeaveData):
                 data_login=text("DATE_SUB(NOW(), INTERVAL 1 MINUTE)"),
                 data_logout=text("NOW()")
             )
-            sql_con.execute_query(insert_respawn)
+            await sql_con.execute_query(insert_respawn)
             return {"message": "Created and closed retroactive session"}
 
-        # Close all open sessions for this player/character
-        for session in open_sessions:
-            update_logout = (
-                respawns_table.update()
-                .where(respawns_table.c.id == session[0])
-                .values(data_logout=text("NOW()"))
-            )
-            sql_con.execute_query(update_logout)
-
-        return {"message": f"Closed {len(open_sessions)} open sessions"}
+        return {"message": f"Closed {result.rowcount} open sessions"}
 
     except Exception as e:
-
-        # Still try to force close any potential open sessions
-        try:
-            force_close = (
-                respawns_table.update()
-                .where(
-                    (respawns_table.c.id_alderon == data.PlayerAlderonId) &
-                    (respawns_table.c.nome_dino == data.CharacterName) &
-                    (respawns_table.c.data_logout.is_(None))
-                )
-                .values(data_logout=text("NOW()"))
-            )
-            sql_con.execute_query(force_close)
-            return {"message": "Forced session closure after error"}
-        except:
-            pass
-
         raise HTTPException(
             status_code=500,
-            detail="Failed to process leave request"
+            detail=f"Failed to process leave request: {str(e)}"
         )
 
 
