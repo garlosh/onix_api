@@ -84,34 +84,42 @@ async def respawn(data: RespawnData):
                     .values(stat2=stat2)
                 )
                 connection.commit()
-        stats = [stat1, stat2]
 
-        # Calculate stats ranges and increases in one go
-        stat_increases = {
-            stat: regression(
+        # Calculate stats ranges and increases
+        stat_increases = {}
+        for stat in [stat1, stat2]:
+            increase = regression(
                 min_time,
-                float(dino_stats[f'{stat}_min'].iloc[0]),  # Convert to float
+                float(dino_stats[f'{stat}_min'].iloc[0]),
                 max_time,
-                float(dino_stats[f'{stat}_max'].iloc[0]),  # Convert to float
+                float(dino_stats[f'{stat}_max'].iloc[0]),
                 time_played
-            ) for stat in stats
-        }
+            )
+            # Se o stat já existe no dicionário, soma o valor
+            if stat in stat_increases:
+                stat_increases[stat] += increase
+            else:
+                stat_increases[stat] = increase
 
     # Process new ancient dinosaur
     elif data.DinosaurGrowth == 1.0 and time_played > min_time:
         stat1, stat2 = choice(ancient_stats), choice(ancient_stats)
-        stats = [stat1, stat2]
 
-        # Calculate stats for new ancient
-        stat_increases = {
-            stat: regression(
+        # Calculate stats ranges and increases
+        stat_increases = {}
+        for stat in [stat1, stat2]:
+            increase = regression(
                 min_time,
-                float(dino_stats[f'{stat}_min'].iloc[0]),  # Convert to float
+                float(dino_stats[f'{stat}_min'].iloc[0]),
                 max_time,
-                float(dino_stats[f'{stat}_max'].iloc[0]),  # Convert to float
+                float(dino_stats[f'{stat}_max'].iloc[0]),
                 time_played
-            ) for stat in stats
-        }
+            )
+            # Se o stat já existe no dicionário, soma o valor
+            if stat in stat_increases:
+                stat_increases[stat] += increase
+            else:
+                stat_increases[stat] = increase
 
         # Insert new ancient record
         with sql_con.ENGINE.connect() as connection:
