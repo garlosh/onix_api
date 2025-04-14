@@ -277,3 +277,20 @@ class GroupData(BaseModel):
                 "GroupID": "3431"
             }
         }
+
+
+class LogoutData(BaseModel):
+    ServerGuid: str
+    ServerName: str
+    PlayerName: str
+    AlderonId: str
+    BattlEyeGUID: str
+
+    class Config:
+        json_schema_extra = {
+            "ServerGuid": "63a86971-0cb9-4569-a43a-4b05317f2d73",
+            "ServerName": "Server",
+            "PlayerName": "Test1",
+            "AlderonId": "048-236-424",
+            "BattlEyeGUID": "05db16f3014acfdd6cc48dc7ce99168e"
+        }
