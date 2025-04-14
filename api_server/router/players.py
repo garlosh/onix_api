@@ -77,12 +77,12 @@ async def respawn(data: RespawnData):
             # Insert new ancient record
             with sql_con.ENGINE.connect() as connection:
                 connection.execute(
-                    ancioes_table.update().values(
-                        stat2=stat2,
-                    ).where(
-                        id_alderon=data.PlayerAlderonId,
-                        nome_player=data.PlayerName
+                    ancioes_table.update()
+                    .where(
+                        (ancioes_table.c.id_alderon == data.PlayerAlderonId) &
+                        (ancioes_table.c.nome_player == data.PlayerName)
                     )
+                    .values(stat2=stat2)
                 )
                 connection.commit()
         stats = [stat1, stat2]
